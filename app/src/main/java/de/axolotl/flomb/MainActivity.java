@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
     public Button btn_addfinal, btn_add, btn_statssets, btn_datepicker, btn_back, btn_settings, btn_resetLastEntry;
     public EditText edt_place, edt_description, edt_amount, edt_deleteRowId;
     public TextView txv_headline, txv_addsumup, txv_sumup11, txv_statssetsumup, txv_statsdisplay;
-    public RadioButton rbn_f, rbn_a, rbn_t, rbn_o, rbn_b, rbn_single, rbn_compare, rbn_change;
+    public RadioButton rbn_f, rbn_l, rbn_o, rbn_m, rbn_b, rbn_single, rbn_compare, rbn_change;
     public CheckBox cbx_keepdata, cbx_minus, cbx_f, cbx_a, cbx_t, cbx_o, cbx_b;
     public LinearLayout lnl_description, lnl_dateplace, lnl_cbxfateb, lnl_deleteRow;
     public RelativeLayout rll_add, rll_start, rll_statssets, rll_settings, rll_stats;
@@ -80,10 +80,10 @@ public class MainActivity extends AppCompatActivity {
     private String description="Beschreibung", category, subcategory;
     private DatePicker datepicker;
     private String dateAdd, dateString, date1fromString, date1toString, date2fromString, date2toString;
-    private final List<String> categories = Arrays.asList(getResources().getStringArray(R.array.categories)),
-                                categories_short = Arrays.asList(getResources().getStringArray(R.array.categories_short));
+    private ArrayList<String> categories, categories_short, food_subcategories, living_subcategories,
+            other_subcategories, move_subcategories, big_subcategories;
 
-    private List<List<String>> sub_categories;
+    private ArrayList<ArrayList<String>> sub_categories;
     private int daysInbetween, date1from, date1to, date2from, date2to, newestDayValue;
     public ArrayAdapter<CharSequence> adapter_subcategory1, adapter_subcategory2, adapter_subcategory3, adapter_subcategory4, adapter_subcategory5;
     DatabaseHelper myDB;
@@ -175,13 +175,16 @@ public class MainActivity extends AppCompatActivity {
         date2fromString=date2fromdt.getDayOfMonth()+"."+date2fromdt.getMonthOfYear()+"."+date2fromdt.getYear();
         date2toString=date2todt.getDayOfMonth()+"."+date2todt.getMonthOfYear()+"."+date2todt.getYear();
         if (rbn_single.isChecked()){
-            txv_statssetsumup.setText(R.string.dates_of + date1fromString + R.string.until + date1toString + R.string.showed);
+            txv_statssetsumup.setText(getString(R.string.dates_of) + date1fromString +
+                    getString(R.string.until) + date1toString + getString(R.string.summarized));
         }
         else if (rbn_compare.isChecked()){
-            txv_statssetsumup.setText(R.string.dates_of + date1fromString+" - "+date1toString + R.string.and + date2fromString + " - " + date2toString+ R.string.compared);
+            txv_statssetsumup.setText(getString(R.string.dates_of) + date1fromString + " - "+
+                    date1toString + getString(R.string.and) + date2fromString + " - " + date2toString + getString(R.string.compared));
         }
         else if (rbn_change.isChecked()){
-            txv_statssetsumup.setText(R.string.change_from + date1fromString + R.string.until + date1toString + R.string.showed);
+            txv_statssetsumup.setText(getString(R.string.change_from) + date1fromString +
+                    getString(R.string.until) + date1toString + getString(R.string.showed));
         }
     }
     //endregion
@@ -211,9 +214,9 @@ public class MainActivity extends AppCompatActivity {
         edt_amount = findViewById(R.id.edt_amount);
         txv_addsumup = findViewById(R.id.txv_addsumup);
         rbn_f = findViewById(R.id.rbn_f);
-        rbn_a = findViewById(R.id.rbn_a);
-        rbn_t = findViewById(R.id.rbn_t);
+        rbn_l = findViewById(R.id.rbn_l);
         rbn_o = findViewById(R.id.rbn_o);
+        rbn_m = findViewById(R.id.rbn_m);
         rbn_b = findViewById(R.id.rbn_b);
         cbx_keepdata = findViewById(R.id.cbx_keepdata);
         cbx_minus = findViewById(R.id.cbx_minus);
@@ -266,11 +269,27 @@ public class MainActivity extends AppCompatActivity {
         btn_back.setVisibility(View.INVISIBLE);
 
         //sub_categories = new ArrayList<List<String>>();
-        sub_categories.add(Arrays.asList(getResources().getStringArray(R.array.food_subcategories)));
-        sub_categories.add(Arrays.asList(getResources().getStringArray(R.array.living_subcategories)));
-        sub_categories.add(Arrays.asList(getResources().getStringArray(R.array.other_subcategories)));
-        sub_categories.add(Arrays.asList(getResources().getStringArray(R.array.move_subcategories)));
-        sub_categories.add(Arrays.asList(getResources().getStringArray(R.array.big_subcategories)));
+
+        categories = new ArrayList<>(Arrays.asList(getResources().getStringArray(R.array.categories)));
+        categories_short = new ArrayList<>(Arrays.asList(getResources().getStringArray(R.array.categories_short)));
+        food_subcategories = new ArrayList<>(Arrays.asList(getResources().getStringArray(R.array.food_subcategories)));
+        living_subcategories = new ArrayList<>(Arrays.asList(getResources().getStringArray(R.array.living_subcategories)));
+        other_subcategories = new ArrayList<>(Arrays.asList(getResources().getStringArray(R.array.other_subcategories)));
+        move_subcategories = new ArrayList<>(Arrays.asList(getResources().getStringArray(R.array.move_subcategories)));
+        big_subcategories = new ArrayList<>(Arrays.asList(getResources().getStringArray(R.array.big_subcategories)));
+        sub_categories = new ArrayList<ArrayList<String>>();
+        sub_categories.add(food_subcategories);
+        sub_categories.add(living_subcategories);
+        sub_categories.add(other_subcategories);
+        sub_categories.add(move_subcategories);
+        sub_categories.add(big_subcategories);
+
+        summed_subs = new int[5][];
+        summed_subs[0] = new int[food_subcategories.size()];
+        summed_subs[1] = new int[living_subcategories.size()];
+        summed_subs[2] = new int[other_subcategories.size()];
+        summed_subs[3] = new int[move_subcategories.size()];
+        summed_subs[4] = new int[big_subcategories.size()];
 
         rbn_f.setChecked(true);
 
@@ -283,11 +302,11 @@ public class MainActivity extends AppCompatActivity {
         adapter_subcategory2.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
         adapter_subcategory3 = ArrayAdapter.createFromResource(this,
-                R.array.move_subcategories,android.R.layout.simple_spinner_item);
+                R.array.other_subcategories,android.R.layout.simple_spinner_item);
         adapter_subcategory3.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
         adapter_subcategory4 = ArrayAdapter.createFromResource(this,
-                R.array.other_subcategories,android.R.layout.simple_spinner_item);
+                R.array.move_subcategories,android.R.layout.simple_spinner_item);
         adapter_subcategory4.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
         adapter_subcategory5 = ArrayAdapter.createFromResource(this,
@@ -313,7 +332,6 @@ public class MainActivity extends AppCompatActivity {
 
     //region Main Movements
     public void onAddClick(View view) throws IOException { //navigates from Main Menu to Add Menu
-
         rll_add.setVisibility(View.VISIBLE);
         rll_start.setVisibility(View.INVISIBLE);
         btn_back.setVisibility(View.VISIBLE);
@@ -434,7 +452,8 @@ public class MainActivity extends AppCompatActivity {
         sbr_date1to.setProgress(0);
         sbr_date2from.setProgress(0);
         sbr_date2to.setProgress(0);
-        txv_statssetsumup.setText(R.string.dates_of + date1fromString + R.string.until + date1toString + R.string.summarized);
+        txv_statssetsumup.setText(getString(R.string.dates_of) + date1fromString +
+                getString(R.string.until) + date1toString + getString(R.string.summarized));
     }
 
     public void onSettingsClick(View view) {
@@ -541,7 +560,7 @@ public class MainActivity extends AppCompatActivity {
         String description = edt_description.getText().toString();
         String place = edt_place.getText().toString();
 
-        if (!description.equals("") && amount!=0 && !place.equals("") && !btn_datepicker.getText().toString().equals(date)){
+        if (!description.equals("") && amount!=0 && !place.equals("") && !btn_datepicker.getText().toString().equals(getString(R.string.date))){
             btn_addfinal.setClickable(true);
         } else btn_addfinal.setClickable(false);
 
@@ -562,6 +581,7 @@ public class MainActivity extends AppCompatActivity {
         overall_o = 0;
         overall_b = 0;
         overall_all = 0;
+
         // TODO array reset?
         //endregion
 
@@ -602,115 +622,10 @@ public class MainActivity extends AppCompatActivity {
             String dataSub = res.getString(res.getColumnIndex("SUBCATEGORY"));
 
             int cat_index = categories.indexOf(dataCategory);
-            int sub_index = sub_categories
-            if (categories.get(0).equals(dataCategory)) {
-                overall_f += res.getInt(1);
-                switch (dataSub) {
-                    case categories.get():
-                        summed_subs[0][0] += res.getInt(1);
-                        break;
-                    case categories.get():
-                        summed_subs[0][0] += res.getInt(1);
-                        break;
-                    case categories.get():
-                        overall_ResBar += res.getInt(1);
-                        break;
-                    case categories.get():
-                        overall_Mensa += res.getInt(1);
-                        break;
-                    case categories.get():
-                        overall_otherFood += res.getInt(1);
-                        break;
-                    default:
-                        break;
-                }
-            } else if (categories.get(1).equals(dataCategory)) {
-                overall_a += res.getInt(1);
-                switch (dataSub) {
-                    case categories.get():
-                        overall_Flat += res.getInt(1);
-                        break;
-                    case categories.get():
-                        overall_Hostel += res.getInt(1);
-                        break;
-                    case categories.get():
-                        overall_Hotel += res.getInt(1);
-                        break;
-                    case categories.get():
-                        overall_AirBnB += res.getInt(1);
-                        break;
-                    case categories.get():
-                        overall_otherliving += res.getInt(1);
-                        break;
-                    default:
-                        break;
-                }
-            } else if (categories.get(2).equals(dataCategory)) {
-                overall_o += res.getInt(1);
-                switch (dataSub) {
-                    case categories.get():
-                        overall_Entry += res.getInt(1);
-                        break;
-                    case categories.get():
-                        overall_Post += res.getInt(1);
-                        break;
-                    case categories.get():
-                        overall_Gift += res.getInt(1);
-                        break;
-                    case categories.get():
-                        overall_Clothes += res.getInt(1);
-                        break;
-                    case categories.get():
-                        overall_Hygiene += res.getInt(1);
-                        break;
-                    case categories.get():
-                        overall_otherOther += res.getInt(1);
-                        break;
-                    default:
-                        break;
-                }
-            } else if (categories.get(3).equals(dataCategory)) {
-                overall_t += res.getInt(1);
-                switch (dataSub) {
-                    case "Train":
-                        overall_Train += res.getInt(1);
-                        break;
-                    case "Bus":
-                        overall_Bus += res.getInt(1);
-                        break;
-                    case "Flug":
-                        overall_Flug += res.getInt(1);
-                        break;
-                    case "MFG":
-                        overall_MFG += res.getInt(1);
-                        break;
-                    case "Bike":
-                        overall_Bike += res.getInt(1);
-                        break;
-                    case "Sonstiges":
-                        overall_otherMove += res.getInt(1);
-                        break;
-                    default:
-                        break;
-                }
-            } else if (categories.get(4).equals(dataCategory)) {
-                overall_b += res.getInt(1);
-                switch (dataSub) {
-                    case "Big":
-                        overall_Big += res.getInt(1);
-                        break;
-                    case "Wage":
-                        overall_Wage += res.getInt(1);
-                        break;
-                    case "Bafoeg":
-                        overall_Bafoeg += res.getInt(1);
-                        break;
-                    default:
-                        break;
-                }
-            } else {
-                overall_b += res.getInt(1);
-            }
+            int sub_index = sub_categories.get(cat_index).indexOf(dataSub);
+            summed_subs[cat_index][sub_index] += res.getInt(1);
+
+
             overall_all += res.getInt(1);
             overall_withoutBig=overall_all-overall_b;
 
@@ -730,31 +645,37 @@ public class MainActivity extends AppCompatActivity {
         builder.insert(0,"Living: "+overall_a+" Cents ("+overall_a/newestDayValue+" pro Tag)\n");
         builder.insert(0,"Food: "+overall_f+" Cents ("+overall_f/newestDayValue+" pro Tag)\n");
 
-        builder.append("\nImbiss/Kiosk/Späti: "+overall_Imbiss+" Cents\n");
-        builder.append("Supermarkt/Laden: "+overall_GS+" Cents\n");
-        builder.append("ResBar: "+overall_ResBar+" Cents\n");
-        builder.append("Mensa: "+overall_Mensa+" Cents\n");
-        builder.append("Sonstiges Essen: "+overall_otherFood+" Cents\n");
-        builder.append("Flat: "+overall_Flat+" Cents\n");
-        builder.append("Hostel: "+overall_Hostel+" Cents\n");
-        builder.append("Hotel: "+overall_Hotel+" Cents\n");
-        builder.append("AirBnB: "+overall_AirBnB+" Cents\n");
-        builder.append("Sonstige Unterkünfte: "+overall_otherliving+" Cents\n");
-        builder.append("Train"+overall_Train+" Cents\n");
-        builder.append("Bus: "+overall_Bus+" Cents\n");
-        builder.append("Flug: "+overall_Flug+" Cents\n");
-        builder.append("MFG: "+overall_MFG+" Cents\n");
-        builder.append("Bike: "+overall_Bike+" Cents\n");
-        builder.append("Sonstige Mittel: "+overall_otherMove+" Cents\n");
-        builder.append("Entry: "+overall_Entry+" Cents\n");
-        builder.append("Post: "+overall_Post+" Cents\n");
-        builder.append("Gift: "+overall_Gift+" Cents\n");
-        builder.append("Clothes: "+overall_Clothes+" Cents\n");
-        builder.append("Hygiene: "+overall_Hygiene+" Cents\n");
-        builder.append("Sonstiges Sonstiges: "+overall_otherOther+" Cents\n");
-        builder.append("Big: "+overall_Big+" Cents\n");
-        builder.append("Wage: "+overall_Wage+" Cents\n");
-        builder.append("Bafoeg: "+overall_Bafoeg+" Cents\n");
+        builder.append("\nImbiss/Kiosk/Späti: "+ summed_subs[0][0] +" Cents\n");
+        builder.append("Supermarkt/Laden: "+ summed_subs[0][1] +" Cents\n");
+        builder.append("ResBar: "+ summed_subs[0][2] +" Cents\n");
+        builder.append("Mensa: "+ summed_subs[0][3] +" Cents\n");
+        builder.append("Sonstiges Essen: "+ summed_subs[0][4] +" Cents\n");
+        builder.append("Flat: "+ summed_subs[1][0] +" Cents\n");
+        builder.append("Hostel: "+ summed_subs[1][1] +" Cents\n");
+        builder.append("Hotel: "+ summed_subs[1][2] +" Cents\n");
+        builder.append("AirBnB: "+ summed_subs[1][3] +" Cents\n");
+        builder.append("Sonstige Unterkünfte: "+ summed_subs[1][4] +" Cents\n");
+        builder.append("Entry: "+ summed_subs[2][0] +" Cents\n");
+        builder.append("Post: "+ summed_subs[2][1] +" Cents\n");
+        builder.append("Gift: "+ summed_subs[2][2] +" Cents\n");
+        builder.append("Clothes: "+ summed_subs[2][3] +" Cents\n");
+        builder.append("Hygiene: "+ summed_subs[2][4] +" Cents\n");
+        builder.append("Sonstiges Sonstiges: "+ summed_subs[2][5] +" Cents\n");
+        builder.append("Train"+ summed_subs[3][0] +" Cents\n");
+        builder.append("Bus: "+ summed_subs[3][1] +" Cents\n");
+        builder.append("Flug: "+ summed_subs[3][2] +" Cents\n");
+        builder.append("MFG: "+ summed_subs[3][3] +" Cents\n");
+        builder.append("Bike: "+ summed_subs[3][4] +" Cents\n");
+        builder.append("Sonstige Mittel: "+ summed_subs[3][5] +" Cents\n");
+        builder.append("Big: "+ summed_subs[4][0] +" Cents\n");
+        builder.append("Wage: "+ summed_subs[4][1] +" Cents\n");
+        builder.append("Bafoeg: "+ summed_subs[4][2] +" Cents\n");
+
+        for (int i = 0; i < summed_subs.length; i++){
+            for (int j = 0; j < summed_subs[i].length; j++)
+                builder.append(summed_subs[i][j]+ " ");
+            builder.append("\n");
+        }
         txv_sumup11.setText(builder.toString());
 
         res.close();
@@ -766,22 +687,22 @@ public class MainActivity extends AppCompatActivity {
             subcategory = "IKS";
             spi_description.setAdapter(adapter_subcategory1);
         }
-        if (rbn_a.isChecked()) {
+        else if (rbn_l.isChecked()) {
             category = "Living";
             subcategory = "Flat";
             spi_description.setAdapter(adapter_subcategory2);
         }
-        if (rbn_t.isChecked()){
-            category = "Move";
-            subcategory = "Train";
-            spi_description.setAdapter(adapter_subcategory3);
-        }
-        if (rbn_o.isChecked()){
+        else if (rbn_o.isChecked()){
             category = "Other";
             subcategory = "Entry";
+            spi_description.setAdapter(adapter_subcategory3);
+        }
+        else if (rbn_m.isChecked()){
+            category = "Move";
+            subcategory = "Train";
             spi_description.setAdapter(adapter_subcategory4);
         }
-        if (rbn_b.isChecked()){
+        else if (rbn_b.isChecked()){
             category = "Big";
             subcategory = "Big";
             spi_description.setAdapter(adapter_subcategory5);
@@ -798,7 +719,7 @@ public class MainActivity extends AppCompatActivity {
     @SuppressWarnings("deprecation")
     public void setDate(View view) {
         showDialog(999);
-        Toast.makeText(getApplicationContext(), "Wähle das Datum aus!", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getApplicationContext(), getString(R.string.choose_date), Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -849,17 +770,20 @@ public class MainActivity extends AppCompatActivity {
         if (rbn_single.isChecked()){
             sbr_date2from.setVisibility(View.INVISIBLE);
             sbr_date2to.setVisibility(View.INVISIBLE);
-            txv_statssetsumup.setText(R.string.dates_of + date1fromString + R.string.until + date1toString + R.string.summarized);
+            txv_statssetsumup.setText(getString(R.string.dates_of) + date1fromString +
+                    getString(R.string.until) + date1toString + getString(R.string.summarized));
         }
         else if (rbn_compare.isChecked()){
             sbr_date2from.setVisibility(View.VISIBLE);
             sbr_date2to.setVisibility(View.VISIBLE);
-            txv_statssetsumup.setText(R.string.dates_of + date1fromString + " - "+date1toString + R.string.and + date2fromString + " - " + date2toString + R.string.compared);
+            txv_statssetsumup.setText(getString(R.string.dates_of) + date1fromString + " - "+
+                    date1toString + getString(R.string.and) + date2fromString + " - " + date2toString + getString(R.string.compared));
         }
         else if (rbn_change.isChecked()){
             sbr_date2from.setVisibility(View.INVISIBLE);
             sbr_date2to.setVisibility(View.INVISIBLE);
-            txv_statssetsumup.setText(R.string.change_from + date1fromString + R.string.until + date1toString + R.string.showed);
+            txv_statssetsumup.setText(getString(R.string.change_from) + date1fromString +
+                    getString(R.string.until) + date1toString + getString(R.string.showed));
         }
     }
 

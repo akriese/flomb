@@ -3,20 +3,22 @@
     <string name="entry_added">Eintrag hinzugefügt!</string>
     <string name="entry_not_added">Eintrag nicht hinzugefügt!</string>
     <string name="date">DATUM</string>
-    <string name="für"> für </string>
-    <string name="am"> am </string>
-    <string name="in"> in </string>
-    <string name="dates_of">Daten vom  </string>
-    <string name="and"> und </string>
-    <string name="compared"> werden verglichen!</string>
-    <string name="summarized"> werden zusammengefasst!</string>
-    <string name="change_from">Entwicklung vom </string>
-    <string name="until"> bis einschließlich dem </string>
-    <string name="showed"> angezeigt!\n</string>
+    <string name="für">&#160; für &#160;</string>
+    <string name="am">&#160; am &#160;</string>
+    <string name="in">&#160; in &#160;</string>
+    <string name="dates_of">Daten vom &#160;</string>
+    <string name="and">&#160; und &#160;</string>
+    <string name="compared">&#160; werden verglichen!</string>
+    <string name="summarized">&#160; werden zusammengefasst!</string>
+    <string name="change_from">Entwicklung vom &#160;</string>
+    <string name="until">&#160; bis einschließlich dem &#160;</string>
+    <string name="showed">&#160; angezeigt!\n</string>
     <string name="statistics">Stats</string>
     <string name="data_del">Data deleted!</string>
+    <string name="settings">Einstellungen</string>
     <string name="data_n_del">Data not deleted!</string>
     <string name="choose_category">Kategorie auswählen!</string>
+    <string name="choose_date">Datum auswählen!</string>
     <string-array name="categories">
         <item>Food</item>
         <item>Living</item>
