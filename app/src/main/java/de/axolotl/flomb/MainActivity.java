@@ -179,13 +179,13 @@ public class MainActivity extends AppCompatActivity {
         date2fromString=date2fromdt.getDayOfMonth()+"."+date2fromdt.getMonthOfYear()+"."+date2fromdt.getYear();
         date2toString=date2todt.getDayOfMonth()+"."+date2todt.getMonthOfYear()+"."+date2todt.getYear();
         if (rbn_single.isChecked()){
-            txv_statssetsumup.setText("Daten vom "+date1fromString+" bis einschließlich\ndem "+date1toString+" werden zusammengefasst!");
+            txv_statssetsumup.setText(R.string.dates_of + date1fromString + R.string.until + date1toString + R.string.showed);
         }
         else if (rbn_compare.isChecked()){
-            txv_statssetsumup.setText("Daten vom "+date1fromString+" - "+date1toString+" und\n"+date2fromString+" - "+date2toString+" werden verglichen!");
+            txv_statssetsumup.setText(R.string.dates_of + date1fromString+" - "+date1toString + R.string.and + date2fromString + " - " + date2toString+ R.string.compared);
         }
         else if (rbn_change.isChecked()){
-            txv_statssetsumup.setText("Entwicklung vom "+date1fromString+" bis einschließlich\ndem "+date1toString+" angezeigt!");
+            txv_statssetsumup.setText(R.string.change_from + date1fromString + R.string.until + date1toString + R.string.showed);
         }
     }
     //endregion
@@ -317,8 +317,8 @@ public class MainActivity extends AppCompatActivity {
 
         rbn_f.setChecked(true);
         spi_description.setAdapter(adapter_subcategory1);
-        category="Food";
-        subcategory="IKS";
+        category=categories.get(0);
+        subcategory=sub_food.get(0);
 
         //region EditText Listener
         edt_amount.addTextChangedListener(new TextWatcher() {
@@ -406,7 +406,7 @@ public class MainActivity extends AppCompatActivity {
         rll_start.setVisibility(View.INVISIBLE);
         rll_statssets.setVisibility(View.VISIBLE);
         btn_back.setVisibility(View.VISIBLE);
-        txv_headline.setText("Stats");
+        txv_headline.setText(R.string.statistics);
 
         sbr_date1from.setOnSeekBarChangeListener(sbr_date1from_listener);
         sbr_date1to.setOnSeekBarChangeListener(sbr_date1to_listener);
@@ -431,7 +431,7 @@ public class MainActivity extends AppCompatActivity {
         sbr_date1to.setProgress(0);
         sbr_date2from.setProgress(0);
         sbr_date2to.setProgress(0);
-        txv_statssetsumup.setText("Daten vom "+date1fromString+" bis einschließlich\ndem "+date1toString+" werden zusammengefasst!");
+        txv_statssetsumup.setText(R.string.dates_of + date1fromStrin + R.string.until + date1toString + R.string.summarized);
     }
 
     public void onSettingsClick(View view) {
@@ -464,9 +464,6 @@ public class MainActivity extends AppCompatActivity {
             btn_back.setVisibility(View.VISIBLE);
             txv_headline.setText("Stats");
         }
-
-
-
     }
     //endregion
 
@@ -541,7 +538,7 @@ public class MainActivity extends AppCompatActivity {
         String description = edt_description.getText().toString();
         String place = edt_place.getText().toString();
 
-        if (!description.equals("") && amount!=0 && !place.equals("") && !btn_datepicker.getText().toString().equals("Datum")){
+        if (!description.equals("") && amount!=0 && !place.equals("") && !btn_datepicker.getText().toString().equals(date)){
             btn_addfinal.setClickable(true);
         } else btn_addfinal.setClickable(false);
 
@@ -600,7 +597,7 @@ public class MainActivity extends AppCompatActivity {
                 case "Hostel": kurzSub = "Hos"; break;
                 case "Hotel": kurzSub = "Hot"; break;
                 case "AirBnB": kurzSub = "Air"; break;
-                case "Zug": kurzSub = "Zug"; break;
+                case "Train": kurzSub = "Train"; break;
                 case "Bus": kurzSub = "Bus"; break;
                 case "Flug": kurzSub = "Flug"; break;
                 case "MFG": kurzSub = "MFG"; break;
@@ -656,7 +653,7 @@ public class MainActivity extends AppCompatActivity {
                 case "Move":
                     overall_t += res.getInt(1);
                     switch (dataSub) {
-                        case "Zug": overall_Train += res.getInt(1); break;
+                        case "Train": overall_Train += res.getInt(1); break;
                         case "Bus": overall_Bus += res.getInt(1); break;
                         case "Flug": overall_Flug += res.getInt(1); break;
                         case "MFG": overall_MFG += res.getInt(1); break;
@@ -716,7 +713,7 @@ public class MainActivity extends AppCompatActivity {
         builder.append("Hotel: "+overall_Hotel+" Cents\n");
         builder.append("AirBnB: "+overall_AirBnB+" Cents\n");
         builder.append("Sonstige Unterkünfte: "+overall_otherliving+" Cents\n");
-        builder.append("Zug: "+overall_Train+" Cents\n");
+        builder.append("Train"+overall_Train+" Cents\n");
         builder.append("Bus: "+overall_Bus+" Cents\n");
         builder.append("Flug: "+overall_Flug+" Cents\n");
         builder.append("MFG: "+overall_MFG+" Cents\n");
@@ -749,7 +746,7 @@ public class MainActivity extends AppCompatActivity {
         }
         if (rbn_t.isChecked()){
             category = "Move";
-            subcategory = "Zug";
+            subcategory = "Train";
             spi_description.setAdapter(adapter_subcategory3);
         }
         if (rbn_o.isChecked()){
@@ -803,6 +800,7 @@ public class MainActivity extends AppCompatActivity {
         DateTimeZone UTC = DateTimeZone.forID("UTC");
         DateTime travelStart= new DateTime(2017,7,5,12,0,0,UTC);
         DateTime addDatedt = new DateTime(year,month,day,13,0,0,UTC);
+
         daysInbetween=Days.daysBetween(travelStart.toLocalDateTime(),addDatedt.toLocalDateTime()).getDays();
         dateAdd=(day+"."+month+"."+year+" ("+daysInbetween+")");
         dateYear=year;
@@ -814,9 +812,9 @@ public class MainActivity extends AppCompatActivity {
     public void onResetChosenClick(View view) {
         Integer deletedRows = myDB.deleteData(edt_deleteRowId.getText().toString());
         if (deletedRows > 0){
-            Toast.makeText(MainActivity.this,"Data deleted!", Toast.LENGTH_LONG).show();
+            Toast.makeText(MainActivity.this,R.string.data_del, Toast.LENGTH_LONG).show();
         } else {
-            Toast.makeText(MainActivity.this,"Data not deleted!", Toast.LENGTH_LONG).show();
+            Toast.makeText(MainActivity.this,R.string.data_n_del, Toast.LENGTH_LONG).show();
         }
     }
 
@@ -824,24 +822,24 @@ public class MainActivity extends AppCompatActivity {
         if (rbn_single.isChecked()){
             sbr_date2from.setVisibility(View.INVISIBLE);
             sbr_date2to.setVisibility(View.INVISIBLE);
-            txv_statssetsumup.setText("Daten vom "+date1fromString+" bis einschließlich dem "+date1toString+" werden zusammengefasst!");
+            txv_statssetsumup.setText(R.string.dates_of + date1fromString + R.string.until + date1toString + R.string.summarized);
         }
         else if (rbn_compare.isChecked()){
             sbr_date2from.setVisibility(View.VISIBLE);
             sbr_date2to.setVisibility(View.VISIBLE);
-            txv_statssetsumup.setText("Daten vom "+date1fromString+" - "+date1toString+" und\n"+date2fromString+" - "+date2toString+" werden verglichen!");
+            txv_statssetsumup.setText(R.string.dates_of + date1fromString + " - "+date1toString + R.string.and + date2fromString + " - " + date2toString + R.string.compared);
         }
         else if (rbn_change.isChecked()){
             sbr_date2from.setVisibility(View.INVISIBLE);
             sbr_date2to.setVisibility(View.INVISIBLE);
-            txv_statssetsumup.setText("Entwicklung vom "+date1fromString+" bis einschließlich dem "+date1toString+" angezeigt!");
+            txv_statssetsumup.setText(R.string.change_from + date1fromString + R.string.until + date1toString + R.string.showed);
         }
     }
 
     public void showStats(View view) {
         if (!cbx_f.isChecked()&&!cbx_a.isChecked()&&!cbx_t.isChecked()&&!cbx_o.isChecked()&&!cbx_b.isChecked()){
             //nothing
-            Toast.makeText(MainActivity.this,"Kategorie auswählen!",Toast.LENGTH_LONG).show();
+            Toast.makeText(MainActivity.this, R.string.choose_category, Toast.LENGTH_LONG).show();
         }
         else {
             rll_statssets.setVisibility(View.INVISIBLE);
