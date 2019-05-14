@@ -13,6 +13,13 @@
         <item>Move</item>
         <item>Big</item>
     </string-array>
+    <string-array name="categories_short">
+        <item>F</item>
+        <item>L</item>
+        <item>O</item>
+        <item>M</item>
+        <item>B</item>
+    </string-array>
     <string-array name="food_subcategories">
         <item>IKS</item>
         <item>GS</item>

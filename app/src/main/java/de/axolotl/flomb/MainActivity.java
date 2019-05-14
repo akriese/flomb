@@ -44,6 +44,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Arrays;
+import java.util.List;
 import java.util.ArrayList;
 import java.util.Calendar;
 
@@ -79,7 +81,13 @@ public class MainActivity extends AppCompatActivity {
     private String description="Beschreibung", category, subcategory;
     private DatePicker datepicker;
     private String dateAdd, dateString, date1fromString, date1toString, date2fromString, date2toString;
-    private String[] categories, sub_food, sub_living, sub_other, sub_move, sub_big;
+    private final List<String> categories = Arrays.asList(getResources().getStringArray(R.array.categories)),
+                                categories_short = Arrays.asList(getResources().getStringArray(R.array.categories_short)),
+                                sub_food = Arrays.asList(getResources().getStringArray(R.array.food_subcategories)),
+                                sub_living = Arrays.asList(getResources().getStringArray(R.array.living_subcategories)),
+                                sub_other = Arrays.asList(getResources().getStringArray(R.array.other_subcategories)),
+                                sub_move = Arrays.asList(getResources().getStringArray(R.array.move_subcategories)),
+                                sub_big = Arrays.asList(getResources().getStringArray(R.array.big_subcategories));
     private int daysInbetween, date1from, date1to, date2from, date2to, newestDayValue;
     public ArrayAdapter<CharSequence> adapter_subcategory1, adapter_subcategory2, adapter_subcategory3, adapter_subcategory4, adapter_subcategory5;
     DatabaseHelper myDB;
@@ -569,13 +577,19 @@ public class MainActivity extends AppCompatActivity {
             String kurz;
             String kurzSub;
             String kurzOrt;
-            switch (res.getString(2)) {
-                case getResources().getStringArray(R.array.categories): kurz = "F"; break;
-                case "Living": kurz = "L"; break;
-                case "Move": kurz = "M"; break;
-                case "Other": kurz = "O"; break;
-                case "Big": kurz = "B"; break;
-                default: kurz = "ERROR"; break;
+            String s = res.getString(2);
+            if (categories.get(0).equals(s)) {
+                kurz = categories_short.get(0);
+            } else if (categories.get(1).equals(s)) {
+                kurz = categories_short.get(1);
+            } else if (categories.get(2).equals(s)) {
+                kurz = categories_short.get(2);
+            } else if (categories.get(3).equals(s)) {
+                kurz = categories_short.get(3);
+            } else if (categories.get(4).equals(s)) {
+                kurz = categories_short.get(4);
+            } else {
+                kurz = "ERROR";
             }
             switch (res.getString(3)){
                 case "IKS": kurzSub = "IKS"; break;
