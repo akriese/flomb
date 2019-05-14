@@ -11,6 +11,7 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -45,9 +46,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.ListIterator;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -72,22 +76,14 @@ public class MainActivity extends AppCompatActivity {
     private int year, month, day, amount=0, dateYear, dateMonth, dateDay;
     private int overall_f=0,overall_a=0,overall_t=0,overall_o=0,overall_b=0, overall_all, overall_withoutBig;
     private int overall_f2=0,overall_a2=0,overall_t2=0,overall_o2=0,overall_b2=0, overall_all2;
-    private int overall_Imbiss, overall_GS, overall_ResBar, overall_Mensa,
-            overall_otherFood, overall_Flat, overall_Hostel, overall_Hotel,
-            overall_AirBnB, overall_otherliving, overall_Train, overall_Bus, overall_Flug,
-            overall_MFG, overall_Bike, overall_otherMove, overall_Entry,
-            overall_Post, overall_Gift, overall_Clothes, overall_Hygiene, overall_otherOther,
-            overall_Big, overall_Wage, overall_Bafoeg;
+    private int[][] summed_subs;
     private String description="Beschreibung", category, subcategory;
     private DatePicker datepicker;
     private String dateAdd, dateString, date1fromString, date1toString, date2fromString, date2toString;
     private final List<String> categories = Arrays.asList(getResources().getStringArray(R.array.categories)),
-                                categories_short = Arrays.asList(getResources().getStringArray(R.array.categories_short)),
-                                sub_food = Arrays.asList(getResources().getStringArray(R.array.food_subcategories)),
-                                sub_living = Arrays.asList(getResources().getStringArray(R.array.living_subcategories)),
-                                sub_other = Arrays.asList(getResources().getStringArray(R.array.other_subcategories)),
-                                sub_move = Arrays.asList(getResources().getStringArray(R.array.move_subcategories)),
-                                sub_big = Arrays.asList(getResources().getStringArray(R.array.big_subcategories));
+                                categories_short = Arrays.asList(getResources().getStringArray(R.array.categories_short));
+
+    private List<List<String>> sub_categories;
     private int daysInbetween, date1from, date1to, date2from, date2to, newestDayValue;
     public ArrayAdapter<CharSequence> adapter_subcategory1, adapter_subcategory2, adapter_subcategory3, adapter_subcategory4, adapter_subcategory5;
     DatabaseHelper myDB;
@@ -269,6 +265,13 @@ public class MainActivity extends AppCompatActivity {
         rll_stats.setVisibility(View.INVISIBLE);
         btn_back.setVisibility(View.INVISIBLE);
 
+        //sub_categories = new ArrayList<List<String>>();
+        sub_categories.add(Arrays.asList(getResources().getStringArray(R.array.food_subcategories)));
+        sub_categories.add(Arrays.asList(getResources().getStringArray(R.array.living_subcategories)));
+        sub_categories.add(Arrays.asList(getResources().getStringArray(R.array.other_subcategories)));
+        sub_categories.add(Arrays.asList(getResources().getStringArray(R.array.move_subcategories)));
+        sub_categories.add(Arrays.asList(getResources().getStringArray(R.array.big_subcategories)));
+
         rbn_f.setChecked(true);
 
         adapter_subcategory1 = ArrayAdapter.createFromResource(this,
@@ -318,7 +321,7 @@ public class MainActivity extends AppCompatActivity {
         rbn_f.setChecked(true);
         spi_description.setAdapter(adapter_subcategory1);
         category=categories.get(0);
-        subcategory=sub_food.get(0);
+        subcategory=sub_categories.get(0).get(0);
 
         //region EditText Listener
         edt_amount.addTextChangedListener(new TextWatcher() {
@@ -431,14 +434,14 @@ public class MainActivity extends AppCompatActivity {
         sbr_date1to.setProgress(0);
         sbr_date2from.setProgress(0);
         sbr_date2to.setProgress(0);
-        txv_statssetsumup.setText(R.string.dates_of + date1fromStrin + R.string.until + date1toString + R.string.summarized);
+        txv_statssetsumup.setText(R.string.dates_of + date1fromString + R.string.until + date1toString + R.string.summarized);
     }
 
     public void onSettingsClick(View view) {
         rll_start.setVisibility(View.INVISIBLE);
         rll_settings.setVisibility(View.VISIBLE);
         btn_back.setVisibility(View.VISIBLE);
-        txv_headline.setText("Settings");
+        txv_headline.setText(R.string.settings);
     }
 
     public void onBackClick(View view) {
@@ -462,7 +465,7 @@ public class MainActivity extends AppCompatActivity {
             rll_statssets.setVisibility(View.VISIBLE);
             rll_stats.setVisibility(View.INVISIBLE);
             btn_back.setVisibility(View.VISIBLE);
-            txv_headline.setText("Stats");
+            txv_headline.setText(R.string.statistics);
         }
     }
     //endregion
@@ -552,19 +555,14 @@ public class MainActivity extends AppCompatActivity {
 
         StringBuilder builder = new StringBuilder();
         //region number reset
-        newestDayValue =0;
-        overall_f=0;
-        overall_a=0;
-        overall_t=0;
-        overall_o=0;
-        overall_b=0;
-        overall_all=0;
-        overall_Imbiss=0; overall_GS=0; overall_ResBar=0; overall_Mensa=0;
-        overall_otherFood=0; overall_Flat=0; overall_Hostel=0; overall_Hotel=0;
-        overall_AirBnB=0; overall_otherliving=0; overall_Train=0; overall_Bus=0; overall_Flug=0;
-        overall_MFG=0; overall_Bike=0; overall_otherMove=0; overall_Entry=0;
-        overall_Post=0; overall_Gift=0; overall_Clothes=0; overall_Hygiene=0; overall_otherOther=0;
-        overall_Big=0;overall_Wage=0; overall_Bafoeg=0;
+        newestDayValue = 0;
+        overall_f = 0;
+        overall_a = 0;
+        overall_t = 0;
+        overall_o = 0;
+        overall_b = 0;
+        overall_all = 0;
+        // TODO array reset?
         //endregion
 
         DateTimeZone UTC = DateTimeZone.forID("UTC");
@@ -572,7 +570,6 @@ public class MainActivity extends AppCompatActivity {
 
         while (res.moveToNext()){
             String kurz;
-            String kurzSub;
             String kurzOrt;
             String s = res.getString(2);
             if (categories.get(0).equals(s)) {
@@ -588,101 +585,131 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 kurz = "ERROR";
             }
-            switch (res.getString(3)){
-                case "IKS": kurzSub = "IKS"; break;
-                case "GS": kurzSub = "GrSt"; break;
-                case "ResBar": kurzSub = "Res"; break;
-                case "Mensa": kurzSub = "Men"; break;
-                case "Flat": kurzSub = "Whn"; break;
-                case "Hostel": kurzSub = "Hos"; break;
-                case "Hotel": kurzSub = "Hot"; break;
-                case "AirBnB": kurzSub = "Air"; break;
-                case "Train": kurzSub = "Train"; break;
-                case "Bus": kurzSub = "Bus"; break;
-                case "Flug": kurzSub = "Flug"; break;
-                case "MFG": kurzSub = "MFG"; break;
-                case "Bike": kurzSub = "Rad"; break;
-                case "Entry": kurzSub = "Entr"; break;
-                case "Gift": kurzSub = "Pre"; break;
-                case "Clothes": kurzSub = "Clo"; break;
-                case "Post": kurzSub = "Post"; break;
-                case "Hygiene": kurzSub = "Hyg"; break;
-                case "Sonstiges": kurzSub = "Son"; break;
-                case "Big": kurzSub = "Big"; break;
-                case "Wage": kurzSub = "Arb"; break;
-                case "Bafoeg": kurzSub = "Baf"; break;
-                default: kurzSub= "ERROR"; break;
-            }
             switch (res.getString(8)){
                 case "Berlin": kurzOrt = "B."; break;
                 case "Jena": kurzOrt = "J."; break;
                 case "unterwegs": kurzOrt = "un."; break;
-                case "unterwegs ": kurzOrt = "un."; break;
                 default: kurzOrt = res.getString(8); break;
             }
 
             DateTime addDatedt = new DateTime(res.getInt(5),res.getInt(6),res.getInt(7),13,0,0,UTC);
             daysInbetween=Days.daysBetween(travelStart.toLocalDateTime(),addDatedt.toLocalDateTime()).getDays();
-            builder.insert(0, res.getInt(1)+" für "+res.getString(4)+" ("+kurz+", "+kurzSub+") am "
-                    +res.getInt(7)+"."+res.getInt(6)+". ("+daysInbetween+", "+res.getInt(0)+") in "+kurzOrt+"\n");
+            builder.insert(0, res.getInt(1) + getString(R.string.für) + res.getString(4)
+                    +" ("+kurz+", "+ res.getString(3)+") " + getString(R.string.am) + res.getInt(7)+"."
+                    +res.getInt(6)+". ("+daysInbetween+", "+res.getInt(0)+") " + getString(R.string.in) +kurzOrt+"\n");
 
             String dataCategory = res.getString(res.getColumnIndex("CATEGORY"));
             String dataSub = res.getString(res.getColumnIndex("SUBCATEGORY"));
 
-            switch (dataCategory) {
-                case "Food":
-                    overall_f += res.getInt(1);
-                    switch (dataSub) {
-                        case "IKS": overall_Imbiss += res.getInt(1); break;
-                        case "GS": overall_GS += res.getInt(1); break;
-                        case "ResBar": overall_ResBar += res.getInt(1); break;
-                        case "Mensa": overall_Mensa += res.getInt(1); break;
-                        case "Sonstiges": overall_otherFood += res.getInt(1); break;
-                        default: break;
-                    } break;
-                case "Living":
-                    overall_a += res.getInt(1);
-                    switch (dataSub) {
-                        case "Flat": overall_Flat += res.getInt(1); break;
-                        case "Hostel": overall_Hostel += res.getInt(1); break;
-                        case "Hotel": overall_Hotel += res.getInt(1); break;
-                        case "AirBnB": overall_AirBnB += res.getInt(1); break;
-                        case "Sonstiges": overall_otherliving += res.getInt(1); break;
-                        default: break;
-                    } break;
-                case "Move":
-                    overall_t += res.getInt(1);
-                    switch (dataSub) {
-                        case "Train": overall_Train += res.getInt(1); break;
-                        case "Bus": overall_Bus += res.getInt(1); break;
-                        case "Flug": overall_Flug += res.getInt(1); break;
-                        case "MFG": overall_MFG += res.getInt(1); break;
-                        case "Bike": overall_Bike += res.getInt(1); break;
-                        case "Sonstiges": overall_otherMove += res.getInt(1); break;
-                        default: break;
-                    }break;
-                case "Other":
-                    overall_o += res.getInt(1);
-                    switch (dataSub) {
-                        case "Entry": overall_Entry += res.getInt(1); break;
-                        case "Post": overall_Post += res.getInt(1); break;
-                        case "Gift": overall_Gift += res.getInt(1); break;
-                        case "Clothes": overall_Clothes += res.getInt(1); break;
-                        case "Hygiene": overall_Hygiene += res.getInt(1); break;
-                        case "Sonstiges": overall_otherOther += res.getInt(1); break;
-                        default: break;
-                    }break;
-                case "Big":
-                    overall_b += res.getInt(1);
-                    switch (dataSub) {
-                        case "Big": overall_Big += res.getInt(1); break;
-                        case "Wage": overall_Wage += res.getInt(1); break;
-                        case "Bafoeg": overall_Bafoeg += res.getInt(1); break;
-                        default: break;
-                    }break;
-
-                default:
-                    overall_b += res.getInt(1); break;
+            int cat_index = categories.indexOf(dataCategory);
+            int sub_index = sub_categories
+            if (categories.get(0).equals(dataCategory)) {
+                overall_f += res.getInt(1);
+                switch (dataSub) {
+                    case categories.get():
+                        summed_subs[0][0] += res.getInt(1);
+                        break;
+                    case categories.get():
+                        summed_subs[0][0] += res.getInt(1);
+                        break;
+                    case categories.get():
+                        overall_ResBar += res.getInt(1);
+                        break;
+                    case categories.get():
+                        overall_Mensa += res.getInt(1);
+                        break;
+                    case categories.get():
+                        overall_otherFood += res.getInt(1);
+                        break;
+                    default:
+                        break;
+                }
+            } else if (categories.get(1).equals(dataCategory)) {
+                overall_a += res.getInt(1);
+                switch (dataSub) {
+                    case categories.get():
+                        overall_Flat += res.getInt(1);
+                        break;
+                    case categories.get():
+                        overall_Hostel += res.getInt(1);
+                        break;
+                    case categories.get():
+                        overall_Hotel += res.getInt(1);
+                        break;
+                    case categories.get():
+                        overall_AirBnB += res.getInt(1);
+                        break;
+                    case categories.get():
+                        overall_otherliving += res.getInt(1);
+                        break;
+                    default:
+                        break;
+                }
+            } else if (categories.get(2).equals(dataCategory)) {
+                overall_o += res.getInt(1);
+                switch (dataSub) {
+                    case categories.get():
+                        overall_Entry += res.getInt(1);
+                        break;
+                    case categories.get():
+                        overall_Post += res.getInt(1);
+                        break;
+                    case categories.get():
+                        overall_Gift += res.getInt(1);
+                        break;
+                    case categories.get():
+                        overall_Clothes += res.getInt(1);
+                        break;
+                    case categories.get():
+                        overall_Hygiene += res.getInt(1);
+                        break;
+                    case categories.get():
+                        overall_otherOther += res.getInt(1);
+                        break;
+                    default:
+                        break;
+                }
+            } else if (categories.get(3).equals(dataCategory)) {
+                overall_t += res.getInt(1);
+                switch (dataSub) {
+                    case "Train":
+                        overall_Train += res.getInt(1);
+                        break;
+                    case "Bus":
+                        overall_Bus += res.getInt(1);
+                        break;
+                    case "Flug":
+                        overall_Flug += res.getInt(1);
+                        break;
+                    case "MFG":
+                        overall_MFG += res.getInt(1);
+                        break;
+                    case "Bike":
+                        overall_Bike += res.getInt(1);
+                        break;
+                    case "Sonstiges":
+                        overall_otherMove += res.getInt(1);
+                        break;
+                    default:
+                        break;
+                }
+            } else if (categories.get(4).equals(dataCategory)) {
+                overall_b += res.getInt(1);
+                switch (dataSub) {
+                    case "Big":
+                        overall_Big += res.getInt(1);
+                        break;
+                    case "Wage":
+                        overall_Wage += res.getInt(1);
+                        break;
+                    case "Bafoeg":
+                        overall_Bafoeg += res.getInt(1);
+                        break;
+                    default:
+                        break;
+                }
+            } else {
+                overall_b += res.getInt(1);
             }
             overall_all += res.getInt(1);
             overall_withoutBig=overall_all-overall_b;
