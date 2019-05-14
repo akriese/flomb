@@ -1,0 +1,433 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context="de.axolotl.flomb.MainActivity">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/txv_headline"
+        android:textSize="40sp"
+        android:text="@string/app_name"
+        android:gravity="center_horizontal"/>
+
+    <!-- ADD -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/rll_add"
+        android:layout_below="@id/txv_headline"
+        android:layout_marginTop="20dp">
+
+        <RadioGroup
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_centerHorizontal="true"
+            android:id="@+id/rgr_fateb"
+            android:onClick="onRbnGroupClick">
+
+            <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="F"
+                android:id="@+id/rbn_f"
+                android:onClick="onRbnGroupClick"/>
+            <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="L"
+                android:id="@+id/rbn_a"
+                android:onClick="onRbnGroupClick"/>
+            <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="O"
+                android:id="@+id/rbn_o"
+                android:onClick="onRbnGroupClick"/>
+            <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="M"
+                android:id="@+id/rbn_t"
+                android:onClick="onRbnGroupClick"/>
+            <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="B"
+                android:id="@+id/rbn_b"
+                android:onClick="onRbnGroupClick"/>
+        </RadioGroup>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/rgr_fateb"
+            android:id="@+id/lnl_description"
+            android:layout_marginTop="20dp"
+            android:layout_centerHorizontal="true"
+            android:weightSum="1">
+
+            <Spinner
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/spi_description"
+                android:layout_weight="0.5" />
+
+            <EditText
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:hint="Beschreibung"
+                android:id="@+id/edt_description"
+                android:layout_weight="0.5"
+                android:inputType="text"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/lnl_dateplace"
+            android:layout_below="@id/lnl_description"
+            android:layout_marginTop="20dp"
+            android:layout_centerHorizontal="true"
+            android:weightSum="1">
+
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/cbx_keepdata"
+                android:text="Merken"
+                android:layout_weight="0.1"/>
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/btn_datepcker"
+                android:text="Datum"
+                android:onClick="setDate"
+                android:layout_weight="0.1"/>
+
+            <EditText
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/edt_place"
+                android:hint="Ort"
+                android:layout_weight="0.7"
+                android:inputType="text"/>
+
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/cbx_minus"
+                android:text="-"
+                android:layout_weight="0.1"
+                android:onClick="cbxMinusClick"/>
+
+        </LinearLayout>
+
+        <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="Betrag"
+            android:id="@+id/edt_amount"
+            android:layout_below="@id/lnl_dateplace"
+            android:inputType="numberDecimal"
+            android:layout_marginTop="15dp"
+            android:layout_centerHorizontal="true"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/txv_addsumup"
+            android:layout_below="@id/edt_amount"
+            android:layout_marginTop="15dp"
+            android:layout_centerHorizontal="true"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/btn_addfinal"
+            android:text="Hinzufügen"
+            android:layout_below="@id/txv_addsumup"
+            android:onClick="addData"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="15dp"/>
+
+
+    </RelativeLayout>
+
+    <!-- START -->
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/rll_start"
+        android:layout_below="@id/txv_headline">
+
+        <ScrollView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/scv_sumup1"
+            android:layout_above="@+id/btn_add">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/txv_sumup11"/>
+        </ScrollView>
+
+        <Button
+            android:id="@+id/btn_add"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:text="Neu"
+            android:onClick="onAddClick"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"/>
+
+        <Button
+            android:id="@+id/btn_statssets"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:text="Statistik"
+            android:onClick="onStatssetsClick"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentStart="true"
+            />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Einstellungen"
+            android:id="@+id/btn_settings"
+            android:layout_centerHorizontal="true"
+            android:layout_alignParentBottom="true"
+            android:onClick="onSettingsClick"/>
+
+    </RelativeLayout>
+
+    <!-- STATS SETTINGS -->
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/rll_statssets"
+        android:layout_below="@id/txv_headline">
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/lnl_cbxfateb"
+            android:layout_centerHorizontal="true"
+            android:gravity="center_horizontal">
+
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/cbx_f"
+                android:text="F"/>
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/cbx_a"
+                android:text="A"/>
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/cbx_t"
+                android:text="T"/>
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/cbx_o"
+                android:text="O"/>
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/cbx_b"
+                android:text="B"/>
+
+        </LinearLayout>
+
+
+        <RadioGroup
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:id="@+id/rgr_stats"
+            android:layout_centerHorizontal="true"
+            android:onClick="onRbnStatsClick"
+            android:layout_below="@id/lnl_cbxfateb">
+
+            <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Einzel"
+                android:id="@+id/rbn_single"
+                android:onClick="onRbnStatsClick"/>
+
+            <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Vergleich"
+                android:id="@+id/rbn_compare"
+                android:onClick="onRbnStatsClick"/>
+
+            <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Entwicklung"
+                android:id="@+id/rbn_change"
+                android:onClick="onRbnStatsClick"/>
+
+
+        </RadioGroup>
+
+        <SeekBar
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sbr_date1from"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@id/rgr_stats"
+            android:progress="0"
+            android:layout_marginTop="20dp"/>
+
+        <SeekBar
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sbr_date1to"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@id/sbr_date1from"
+            android:progress="0"
+            android:layout_marginTop="20dp"/>
+
+        <SeekBar
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sbr_date2from"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@id/sbr_date1to"
+            android:progress="0"
+            android:layout_marginTop="20dp"/>
+
+        <SeekBar
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sbr_date2to"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@id/sbr_date2from"
+            android:progress="0"
+            android:layout_marginTop="20dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/txv_statssetsumup"
+            android:text="Daten von:"
+            android:layout_below="@id/sbr_date2to"
+            android:layout_marginTop="20dp"
+            android:layout_centerHorizontal="true"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:text="Anzeigen!"
+            android:id="@+id/btn_statscontinue"
+            android:onClick="showStats"
+            android:layout_below="@id/txv_statssetsumup"
+            android:layout_marginTop="20dp"/>
+
+    </RelativeLayout>
+
+    <!-- SETTINGS -->
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/txv_headline"
+        android:id="@+id/rll_settings">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/lnl_deleteRow"
+            android:weightSum="1">
+
+            <EditText
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:hint="ID"
+                android:id="@+id/edt_deleteRowId"
+                android:inputType="numberDecimal"
+                android:layout_weight="0.6"/>
+
+            <Button
+                android:id="@+id/btn_resetLastEntry"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="Eintrag zurücksetzen"
+                android:onClick="onResetChosenClick"
+                android:layout_centerHorizontal="false"
+                android:layout_weight="0.4"/>
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btn_backupDB"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:text="Backup DB"
+            android:onClick="onBackupDBClick"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@id/lnl_deleteRow"/>
+
+    </RelativeLayout>
+
+    <!-- STATS -->
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/rll_stats"
+        android:layout_below="@id/txv_headline"
+        android:layout_marginTop="10dp">
+
+        <ScrollView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/txv_statsdisplay"
+                android:layout_centerHorizontal="true"
+                />
+
+        </ScrollView>
+
+
+
+    </RelativeLayout>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Zurück"
+        android:id="@+id/btn_back"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:onClick="onBackClick"/>
+
+
+
+
+
+
+
+</RelativeLayout>

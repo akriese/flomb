@@ -1,0 +1,52 @@
+<resources>
+    <string name="app_name">FLOMB</string>
+    <string name="entry_added">Eintrag hinzugefügt!</string>
+    <string name="entry_not_added">Eintrag nicht hinzugefügt!</string>
+    <string name="date">DATUM</string>
+    <string name="für"> für </string>
+    <string name="am"> am </string>
+    <string name="in"> in </string>
+    <string-array name="categories">
+        <item>Food</item>
+        <item>Living</item>
+        <item>Other</item>
+        <item>Move</item>
+        <item>Big</item>
+    </string-array>
+    <string-array name="food_subcategories">
+        <item>IKS</item>
+        <item>GS</item>
+        <item>ResBar</item>
+        <item>Mensa</item>
+        <item>Else</item>
+    </string-array>
+    <string-array name="living_subcategories">
+        <item>Flat</item>
+        <item>Hostel</item>
+        <item>Hotel</item>
+        <item>AirBnB</item>
+        <item>Else</item>
+    </string-array>
+    <string-array name="move_subcategories">
+        <item>Train</item>
+        <item>Bus</item>
+        <item>MFG</item>
+        <item>Air</item>
+        <item>Bike</item>
+        <item>Else</item>
+    </string-array>
+    <string-array name="other_subcategories">
+        <item>Entry</item>
+        <item>Gift</item>
+        <item>Clothes</item>
+        <item>Post</item>
+        <item>Hygiene</item>
+        <item>Else</item>
+    </string-array>
+    <string-array name="big_subcategories">
+        <item>Big</item>
+        <item>Wage</item>
+        <item>Bafoeg</item>
+    </string-array>
+
+</resources>
