@@ -21,7 +21,7 @@ import java.nio.channels.FileChannel;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
-    public static final String DATABASE_NAME = "fateb.db";
+    public static final String DATABASE_NAME = "flomb.db";
     public static final String TABLE_NAME = "Ausgaben";
     public static final String COL_0 = "ID";
     public static final String COL_1 = "AMOUNT";

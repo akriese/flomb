@@ -84,7 +84,7 @@
             <EditText
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:hint="Beschreibung"
+                android:hint="@string/description"
                 android:id="@+id/edt_description"
                 android:layout_weight="0.5"
                 android:inputType="text"/>
@@ -103,14 +103,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/cbx_keepdata"
-                android:text="Merken"
+                android:text="@string/remember"
                 android:layout_weight="0.1"/>
 
             <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/btn_datepcker"
-                android:text="Datum"
+                android:text="@string/date"
                 android:onClick="setDate"
                 android:layout_weight="0.1"/>
 
@@ -118,7 +118,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/edt_place"
-                android:hint="Ort"
+                android:hint="@string/place"
                 android:layout_weight="0.7"
                 android:inputType="text"/>
 
@@ -135,7 +135,7 @@
         <EditText
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:hint="Betrag"
+            android:hint="@string/amount"
             android:id="@+id/edt_amount"
             android:layout_below="@id/lnl_dateplace"
             android:inputType="numberDecimal"
@@ -154,7 +154,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/btn_addfinal"
-            android:text="Hinzufügen"
+            android:text="@string/add"
             android:layout_below="@id/txv_addsumup"
             android:onClick="addData"
             android:layout_centerHorizontal="true"

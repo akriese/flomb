@@ -77,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
     private int overall_f=0,overall_a=0,overall_t=0,overall_o=0,overall_b=0, overall_all, overall_withoutBig;
     private int overall_f2=0,overall_a2=0,overall_t2=0,overall_o2=0,overall_b2=0, overall_all2;
     private int[][] summed_subs;
+    private int[] summed_cat;
     private String description="Beschreibung", category, subcategory;
     private DatePicker datepicker;
     private String dateAdd, dateString, date1fromString, date1toString, date2fromString, date2toString;
@@ -290,6 +291,7 @@ public class MainActivity extends AppCompatActivity {
         summed_subs[2] = new int[other_subcategories.size()];
         summed_subs[3] = new int[move_subcategories.size()];
         summed_subs[4] = new int[big_subcategories.size()];
+        summed_cat = new int[categories.size()];
 
         rbn_f.setChecked(true);
 
@@ -492,11 +494,11 @@ public class MainActivity extends AppCompatActivity {
     //Datenbank auf SD laden
     public static void backupDatabase() throws IOException {
         //Open your local db as the input stream
-        String inFileName = "/data/data/antonk/fatebDE/databases/fateb.db";
+        String inFileName = "/data/data/de/axolotl/flomb/databases/flomb.db";
         File dbFile = new File(inFileName);
         FileInputStream fis = new FileInputStream(dbFile);
 
-        String outFileName = Environment.getExternalStorageDirectory() + "/fateb.db";
+        String outFileName = Environment.getExternalStorageDirectory() + "/flomb.db";
         //Open the empty db as the output stream
         OutputStream output = new FileOutputStream(outFileName);
         //transfer bytes from the inputfile to the outputfile
@@ -615,7 +617,7 @@ public class MainActivity extends AppCompatActivity {
             DateTime addDatedt = new DateTime(res.getInt(5),res.getInt(6),res.getInt(7),13,0,0,UTC);
             daysInbetween=Days.daysBetween(travelStart.toLocalDateTime(),addDatedt.toLocalDateTime()).getDays();
             builder.insert(0, res.getInt(1) + getString(R.string.für) + res.getString(4)
-                    +" ("+kurz+", "+ res.getString(3)+") " + getString(R.string.am) + res.getInt(7)+"."
+                    +" ("+kurz+", "+ res.getString(3)+")" + getString(R.string.am) + res.getInt(7)+"."
                     +res.getInt(6)+". ("+daysInbetween+", "+res.getInt(0)+") " + getString(R.string.in) +kurzOrt+"\n");
 
             String dataCategory = res.getString(res.getColumnIndex("CATEGORY"));
@@ -997,7 +999,7 @@ public class MainActivity extends AppCompatActivity {
                     MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
         } else {
             //granted, do backup
-            Toast.makeText(MainActivity.this, myDB.exportDatabase("fateb.db"), Toast.LENGTH_LONG).show();
+            Toast.makeText(MainActivity.this, myDB.exportDatabase("flomb.db"), Toast.LENGTH_LONG).show();
         }
     }
 }
