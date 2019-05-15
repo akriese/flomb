@@ -52,6 +52,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.ListIterator;
+import java.util.stream.IntStream;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -639,13 +640,17 @@ public class MainActivity extends AppCompatActivity {
         if (newestDayValue==0){
             newestDayValue=1;
         }
+
+        for (int i = 0; i < summed_cat.length; i++)
+            summed_cat[i] = IntStream.of(summed_subs[i]).sum();
+
         builder.insert(0,"Without Big: "+overall_withoutBig+" Cents ("+overall_withoutBig/newestDayValue+" pro Tag)\n\n");
-        builder.insert(0,"ALL: "+overall_all+" Cents ("+overall_all/newestDayValue+" pro Tag)\n");
-        builder.insert(0,"Big: "+overall_b+" Cents ("+overall_b/newestDayValue+" pro Tag)\n\n");
-        builder.insert(0,"Other: "+overall_o+" Cents ("+overall_o/newestDayValue+" pro Tag)\n");
-        builder.insert(0,"Move: "+overall_t+" Cents ("+overall_t/newestDayValue+" pro Tag)\n");
-        builder.insert(0,"Living: "+overall_a+" Cents ("+overall_a/newestDayValue+" pro Tag)\n");
-        builder.insert(0,"Food: "+overall_f+" Cents ("+overall_f/newestDayValue+" pro Tag)\n");
+        builder.insert(0,"ALL: "+ IntStream.of(summed_cat).sum() +" Cents ("+overall_all/newestDayValue+" pro Tag)\n");
+        builder.insert(0,"Big: "+ summed_cat[4] +" Cents ("+summed_cat[4]/newestDayValue+" pro Tag)\n\n");
+        builder.insert(0,"Other: "+ summed_cat[3] +" Cents ("+summed_cat[3]/newestDayValue+" pro Tag)\n");
+        builder.insert(0,"Move: "+ summed_cat[2] +" Cents ("+summed_cat[2]/newestDayValue+" pro Tag)\n");
+        builder.insert(0,"Living: "+ summed_cat[1] +" Cents ("+summed_cat[1]/newestDayValue+" pro Tag)\n");
+        builder.insert(0,"Food: "+ summed_cat[0] +" Cents ("+summed_cat[0]/newestDayValue+" pro Tag)\n");
 
         builder.append("\nImbiss/Kiosk/Späti: "+ summed_subs[0][0] +" Cents\n");
         builder.append("Supermarkt/Laden: "+ summed_subs[0][1] +" Cents\n");
