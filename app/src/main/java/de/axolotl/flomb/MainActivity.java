@@ -75,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
     private int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE=0;
     private Calendar calendar;
     private int year, month, day, amount=0, dateYear, dateMonth, dateDay;
-    private int overall_f=0,overall_a=0,overall_t=0,overall_o=0,overall_b=0, overall_all, overall_withoutBig;
+    private int overall_all, overall_withoutBig;
     private int overall_f2=0,overall_a2=0,overall_t2=0,overall_o2=0,overall_b2=0, overall_all2;
     private int[][] summed_subs;
     private int[] summed_cat;
@@ -423,7 +423,6 @@ public class MainActivity extends AppCompatActivity {
         placeAndDate.getInt("YEAR",2017);
         placeAndDate.getInt("MONTH",7);
         placeAndDate.getInt("DAY",5);
-
     }
 
     public void onStatssetsClick(View view) { //navigates from Main Menu to Statistic's Settings Menu
@@ -522,6 +521,7 @@ public class MainActivity extends AppCompatActivity {
         else Toast.makeText(MainActivity.this,getString(R.string.entry_not_added),Toast.LENGTH_LONG).show();
 
         //region Keep Data
+        //TODO reduzieren
         if (cbx_keepdata.isChecked()){
             SharedPreferences placeAndDate = getSharedPreferences("USER_PREFERENCES_PLACE_AND_DATE", MODE_PRIVATE);
             SharedPreferences.Editor editor = placeAndDate.edit();
@@ -567,8 +567,6 @@ public class MainActivity extends AppCompatActivity {
             btn_addfinal.setClickable(true);
         } else btn_addfinal.setClickable(false);
 
-
-
         txv_addsumup.setText(amount+getString(R.string.für)+description+","+getString(R.string.für)+dateAdd+","+getString(R.string.in)+place);
     }
 
@@ -578,14 +576,11 @@ public class MainActivity extends AppCompatActivity {
         StringBuilder builder = new StringBuilder();
         //region number reset
         newestDayValue = 0;
-        overall_f = 0;
-        overall_a = 0;
-        overall_t = 0;
-        overall_o = 0;
-        overall_b = 0;
         overall_all = 0;
 
-        // TODO array reset?
+        for (int i = 0; i < summed_subs.length; i++)
+            for (int j = 0; j < summed_subs[i].length; j++)
+                summed_subs[i][j] = 0;
         //endregion
 
         DateTimeZone UTC = DateTimeZone.forID("UTC");
@@ -595,6 +590,7 @@ public class MainActivity extends AppCompatActivity {
             String kurz;
             String kurzOrt;
             String s = res.getString(2);
+            //TODO geht auch kürzer
             if (categories.get(0).equals(s)) {
                 kurz = categories_short.get(0);
             } else if (categories.get(1).equals(s)) {
@@ -629,13 +625,12 @@ public class MainActivity extends AppCompatActivity {
             summed_subs[cat_index][sub_index] += res.getInt(1);
 
 
-            overall_all += res.getInt(1);
-            overall_withoutBig=overall_all-overall_b;
-
             if (daysInbetween>newestDayValue){
                 newestDayValue=daysInbetween;
             }
         }
+
+
 
         if (newestDayValue==0){
             newestDayValue=1;
@@ -644,14 +639,18 @@ public class MainActivity extends AppCompatActivity {
         for (int i = 0; i < summed_cat.length; i++)
             summed_cat[i] = IntStream.of(summed_subs[i]).sum();
 
+        overall_all = IntStream.of(summed_cat).sum();
+        overall_withoutBig=overall_all-summed_cat[4];
+
         builder.insert(0,"Without Big: "+overall_withoutBig+" Cents ("+overall_withoutBig/newestDayValue+" pro Tag)\n\n");
-        builder.insert(0,"ALL: "+ IntStream.of(summed_cat).sum() +" Cents ("+overall_all/newestDayValue+" pro Tag)\n");
+        builder.insert(0,"ALL: "+ overall_all +" Cents ("+overall_all/newestDayValue+" pro Tag)\n");
         builder.insert(0,"Big: "+ summed_cat[4] +" Cents ("+summed_cat[4]/newestDayValue+" pro Tag)\n\n");
         builder.insert(0,"Other: "+ summed_cat[3] +" Cents ("+summed_cat[3]/newestDayValue+" pro Tag)\n");
         builder.insert(0,"Move: "+ summed_cat[2] +" Cents ("+summed_cat[2]/newestDayValue+" pro Tag)\n");
         builder.insert(0,"Living: "+ summed_cat[1] +" Cents ("+summed_cat[1]/newestDayValue+" pro Tag)\n");
         builder.insert(0,"Food: "+ summed_cat[0] +" Cents ("+summed_cat[0]/newestDayValue+" pro Tag)\n");
 
+        // TODO Schleife machen
         builder.append("\nImbiss/Kiosk/Späti: "+ summed_subs[0][0] +" Cents\n");
         builder.append("Supermarkt/Laden: "+ summed_subs[0][1] +" Cents\n");
         builder.append("ResBar: "+ summed_subs[0][2] +" Cents\n");
@@ -690,6 +689,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void onRbnGroupClick(View view) {
         if (rbn_f.isChecked()) {
+            //TODO aliases umschreiben
             category = "Food";
             subcategory = "IKS";
             spi_description.setAdapter(adapter_subcategory1);
@@ -741,7 +741,6 @@ public class MainActivity extends AppCompatActivity {
     private DatePickerDialog.OnDateSetListener myDateListener = new DatePickerDialog.OnDateSetListener() {
         @Override
         public void onDateSet(DatePicker arg0, int arg1, int arg2, int arg3) {
-            // TODO Auto-generated method stub
             // arg1 = year
             // arg2 = month
             // arg3 = day
@@ -807,7 +806,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void analyzeData(){
-        overall_f=0;overall_a=0;overall_t=0;overall_o=0;overall_b=0;overall_all=0;
+        for (int i = 0; i < summed_cat.length; i++)
+            summed_cat[i] = 0;
+        overall_all=0;
         overall_f2=0;overall_a2=0;overall_t2=0;overall_o2=0;overall_b2=0;overall_all2=0;
         Cursor res = myDB.getAllData();
         StringBuilder builderDetails = new StringBuilder();
@@ -815,6 +816,7 @@ public class MainActivity extends AppCompatActivity {
         StringBuilder builderStats = new StringBuilder();
         DateTimeZone UTC = DateTimeZone.forID("UTC");
         DateTime travelStart= new DateTime(2017,7,5,12,0,0,UTC);
+        //TODO reduzieren!
         if (rbn_single.isChecked()){
             while (res.moveToNext()) {
                 DateTime checkDatedt = new DateTime(res.getInt(5), res.getInt(6), res.getInt(7), 13, 0, 0, UTC);
@@ -867,6 +869,7 @@ public class MainActivity extends AppCompatActivity {
             int zeitspanne = date1to-date1from+1;
             if (overall_all==0){overall_all=1;}
             builderStats.append("Modus: Einzel\n");
+            //TODO in Schleife
             builderStats.append("Zeitraum: "+date1fromString+" bis "+date1toString+" ("+zeitspanne+" Tage)\n");
             if (cbx_f.isChecked()){builderStats.append("\nFood: "+overall_f+" Cent ("+overall_f/zeitspanne+" pro Tag, "+ overall_f*100/overall_all+" Prozent)\n");}
             if (cbx_a.isChecked()){builderStats.append("Living: "+overall_a+" Cent ("+overall_a/zeitspanne+" pro Tag, "+overall_a*100/overall_all+" Prozent)\n");}
@@ -974,6 +977,7 @@ public class MainActivity extends AppCompatActivity {
             if (overall_all==0){overall_all=1;}
             if (overall_all2==0){overall_all2=1;}
             builderStats.append("Modus: Vergleich\n");
+            //TODO schleife vllt von oben?
             builderStats.append("Zeitraum: "+date1fromString+" bis "+date1toString+" ("+zeitspanne+" Tage) und\n"+date2fromString+" bis "+date2toString+" ("+zeitspanne2+" Tage)\n");
             if (cbx_f.isChecked()){builderStats.append("\nFood: "+overall_f+"---"+overall_f2+" Cent ("+overall_f/zeitspanne+"---"+overall_f2/zeitspanne2+" pro Tag, "+ overall_f*100/overall_all+"/"+overall_f2*100/overall_all2+"%)\n");}
             if (cbx_a.isChecked()){builderStats.append("Living: "+overall_a+"---"+overall_a2+" Cent ("+overall_a/zeitspanne+"---"+overall_a2/zeitspanne2+" pro Tag, "+overall_a*100/overall_all+"/"+overall_a2*100/overall_all2+"%)\n");}
