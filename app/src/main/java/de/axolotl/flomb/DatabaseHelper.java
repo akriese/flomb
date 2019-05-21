@@ -8,12 +8,15 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Environment;
 import android.widget.Toast;
 
+import org.joda.time.DateTime;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
+import java.util.ArrayList;
 
 /**
  * Created by Anton on 12.02.2017.
@@ -72,9 +75,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Cursor res = db.rawQuery("select * from "+TABLE_NAME,null);
         return res;
     }
-    public Cursor getAllData2(){
+    //TODO Funktion schreiben
+    //TODO auf datums-type wechseln?
+    public Cursor getQueryData(ArrayList<String> cats, DateTime from, DateTime to){
+        int frY = from.getYear();
+        int frM = from.getMonthOfYear();
+        int frD = from.getDayOfMonth();
+        int toY = to.getYear();
+        int toM = to.getMonthOfYear();
+        int toD = to.getDayOfMonth();
+
         SQLiteDatabase db = this.getWritableDatabase();
-        Cursor res = db.rawQuery("select * from "+TABLE_NAME,null);
+        Cursor res = db.rawQuery("select * from "+TABLE_NAME+" where ",null);
         return res;
     }
 

@@ -810,6 +810,7 @@ public class MainActivity extends AppCompatActivity {
             summed_cat[i] = 0;
         overall_all=0;
         overall_f2=0;overall_a2=0;overall_t2=0;overall_o2=0;overall_b2=0;overall_all2=0;
+        //TODO hier memberfunction myDB.getQueryData(args) verwenden
         Cursor res = myDB.getAllData();
         StringBuilder builderDetails = new StringBuilder();
         StringBuilder builderDetails2 = new StringBuilder();
@@ -817,6 +818,7 @@ public class MainActivity extends AppCompatActivity {
         DateTimeZone UTC = DateTimeZone.forID("UTC");
         DateTime travelStart= new DateTime(2017,7,5,12,0,0,UTC);
         //TODO reduzieren!
+        //TODO SQL Query mit allen Selections (schneller und schöner)
         if (rbn_single.isChecked()){
             while (res.moveToNext()) {
                 DateTime checkDatedt = new DateTime(res.getInt(5), res.getInt(6), res.getInt(7), 13, 0, 0, UTC);
