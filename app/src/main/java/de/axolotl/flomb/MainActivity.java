@@ -406,6 +406,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 boolean handled = false;
+                //TODO füge ein, dass addData ausgeführt wird, wenn bei Amount enter gedrückt wird
                 if (actionId == EditorInfo.IME_ACTION_DONE){
                     InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(v.getWindowToken(),0);
@@ -419,6 +420,7 @@ public class MainActivity extends AppCompatActivity {
         //endregion
 
         SharedPreferences placeAndDate = getSharedPreferences("USER_PREFERENCES_PLACE_AND_DATE", MODE_PRIVATE);
+        //TODO benutze diese gets für Èinstellung der Seite
         placeAndDate.getString("PLACE","0");
         placeAndDate.getInt("YEAR",2017);
         placeAndDate.getInt("MONTH",7);
@@ -522,34 +524,28 @@ public class MainActivity extends AppCompatActivity {
 
         //region Keep Data
         //TODO reduzieren
+        SharedPreferences placeAndDate = getSharedPreferences("USER_PREFERENCES_PLACE_AND_DATE", MODE_PRIVATE);
+        SharedPreferences.Editor editor = placeAndDate.edit();
         if (cbx_keepdata.isChecked()){
-            SharedPreferences placeAndDate = getSharedPreferences("USER_PREFERENCES_PLACE_AND_DATE", MODE_PRIVATE);
-            SharedPreferences.Editor editor = placeAndDate.edit();
-
             editor.putString("PLACE",edt_place.getText().toString());
+            //eingegebenes Datum
+            editor.putInt("YEAR",dateYear);
+            editor.putInt("MONTH",dateMonth);
+            editor.putInt("DAY",dateDay);
+        }
+        else {
+            editor.putString("PLACE","");
+            //heutiges Datum
             editor.putInt("YEAR",year);
             editor.putInt("MONTH",month);
             editor.putInt("DAY",day);
-
-            editor.apply();
-        }
-        else {
-            SharedPreferences placeAndDate = getSharedPreferences("USER_PREFERENCES_PLACE_AND_DATE", MODE_PRIVATE);
-            SharedPreferences.Editor editor = placeAndDate.edit();
-
-            editor.putString("PLACE","");
-            editor.putInt("YEAR",year); //get current year
-            editor.putInt("MONTH",month); //get current month
-            editor.putInt("DAY",day); //get current day
-
-            editor.apply();
 
             edt_description.setText("");
             edt_place.setText("");
             btn_datepicker.setText(getString(R.string.date));
             cbx_minus.setChecked(false);
         }
-
+        editor.apply();
         updateFrontPage();
         //endregion
     }
