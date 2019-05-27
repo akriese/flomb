@@ -79,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
     private int overall_f2=0,overall_a2=0,overall_t2=0,overall_o2=0,overall_b2=0, overall_all2;
     private int[][] summed_subs;
     private int[] summed_cat;
-    private String description="Beschreibung", category, subcategory;
+    private String description="Beschreibung", category, subcategory, place;
     private DatePicker datepicker;
     private String dateAdd, dateString, date1fromString, date1toString, date2fromString, date2toString;
     private ArrayList<String> categories, categories_short, food_subcategories, living_subcategories,
@@ -373,13 +373,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 boolean handled = false;
-                if (actionId == EditorInfo.IME_ACTION_DONE){
-                    edt_place.requestFocus();
-
-                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                    //TODO leite zu Datumsauswahl weiter, dann zu Place
-                    imm.showSoftInput(edt_place,InputMethodManager.SHOW_IMPLICIT);
-                    edt_place.setSelection(edt_place.getText().length());
+                if (actionId == EditorInfo.IME_ACTION_NEXT){
+                    //switched zu Datumsauwahl
+                    setDate();
+                    updateInformation();
                     handled = true;
                 }
                 return handled;
@@ -391,12 +388,15 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 boolean handled = false;
-                if (actionId == EditorInfo.IME_ACTION_DONE){
+                if (actionId == EditorInfo.IME_ACTION_NEXT){
                     edt_amount.requestFocus();
-
                     InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.showSoftInput(edt_amount,InputMethodManager.SHOW_IMPLICIT);
                     edt_amount.setSelection(edt_amount.getText().length());
+                    updateInformation();
+                    handled = true;
+                }
+                if (actionId == EditorInfo.IME_ACTION_DONE){
                     handled = true;
                 }
                 return handled;
@@ -411,10 +411,10 @@ public class MainActivity extends AppCompatActivity {
                 if (actionId == EditorInfo.IME_ACTION_DONE){
                     InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(v.getWindowToken(),0);
-                    amount=Integer.parseInt(edt_amount.getText().toString());
                     updateInformation();
-                    //TODO perform addable check
-                    insertToDB();
+                    if (checkAddData())
+                        insertToDB();
+                    else Toast.makeText(MainActivity.this,getString(R.string.missing_data),Toast.LENGTH_LONG).show();
                     handled=true;
                 }
                 return handled;
@@ -471,7 +471,7 @@ public class MainActivity extends AppCompatActivity {
         txv_headline.setText(R.string.settings);
     }
 
-    public void onBackClick(View view) {
+    public void goBack(){
         if (rll_add.getVisibility()==View.VISIBLE){
             rll_add.setVisibility(View.INVISIBLE);
             rll_start.setVisibility(View.VISIBLE);
@@ -494,6 +494,19 @@ public class MainActivity extends AppCompatActivity {
             btn_back.setVisibility(View.VISIBLE);
             txv_headline.setText(R.string.statistics);
         }
+    }
+
+    public void onBackClick(View view) {
+        goBack();
+    }
+
+    @Override
+    public void onBackPressed() {
+        //TODO exit dialog
+        if (rll_start.getVisibility()==View.VISIBLE)
+            {// exit dialog
+            }
+        else goBack();
     }
     //endregion
 
@@ -520,11 +533,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void addData(View view){
-        insertToDB();
+        updateInformation();
+        if (checkAddData())
+            insertToDB();
+        else Toast.makeText(MainActivity.this,getString(R.string.missing_data),Toast.LENGTH_LONG).show();
+    }
+
+    public boolean checkAddData(){
+        if (edt_description.getText().toString().length() == 0) return false;
+        if (edt_place.getText().toString().length() == 0) return false;
+        if (amount == 0) return false;
+        if (btn_datepicker.getText().toString().equals(getString(R.string.date))) return false;
+        return true;
     }
 
     public void insertToDB () {
-        boolean isInserted = myDB.insertData(amount,category,subcategory,edt_description.getText().toString(), dateYear, dateMonth, dateDay, edt_place.getText().toString());
+        boolean isInserted = myDB.insertData(amount, category, subcategory, description, dateYear, dateMonth, dateDay, place);
         if (isInserted){
             Toast.makeText(MainActivity.this,getString(R.string.entry_added),Toast.LENGTH_LONG).show();
         }
@@ -562,14 +586,10 @@ public class MainActivity extends AppCompatActivity {
         if (edt_amount.getText().length()==0){
             edt_amount.setText("0");
         }
-        amount=Integer.parseInt(edt_amount.getText().toString());
+        amount = Integer.parseInt(edt_amount.getText().toString());
         if (cbx_minus.isChecked()) amount=amount*(-1);
-        String description = edt_description.getText().toString();
-        String place = edt_place.getText().toString();
-
-        if (!description.equals("") && amount!=0 && !place.equals("") && !btn_datepicker.getText().toString().equals(getString(R.string.date))){
-            btn_addfinal.setClickable(true);
-        } else btn_addfinal.setClickable(false);
+        description = edt_description.getText().toString();
+        place = edt_place.getText().toString();
 
         txv_addsumup.setText(amount+getString(R.string.für)+description+","+getString(R.string.für)+dateAdd+","+getString(R.string.in)+place);
     }
@@ -594,20 +614,8 @@ public class MainActivity extends AppCompatActivity {
             String kurz;
             String kurzOrt;
             String s = res.getString(2);
-            //TODO geht auch kürzer
-            if (categories.get(0).equals(s)) {
-                kurz = categories_short.get(0);
-            } else if (categories.get(1).equals(s)) {
-                kurz = categories_short.get(1);
-            } else if (categories.get(2).equals(s)) {
-                kurz = categories_short.get(2);
-            } else if (categories.get(3).equals(s)) {
-                kurz = categories_short.get(3);
-            } else if (categories.get(4).equals(s)) {
-                kurz = categories_short.get(4);
-            } else {
-                kurz = "ERROR";
-            }
+            kurz = categories_short.get(categories.indexOf(s));
+
             switch (res.getString(8)){
                 case "Berlin": kurzOrt = "B."; break;
                 case "Jena": kurzOrt = "J."; break;
@@ -634,8 +642,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-
-
         if (newestDayValue==0){
             newestDayValue=1;
         }
@@ -648,77 +654,46 @@ public class MainActivity extends AppCompatActivity {
 
         builder.insert(0,"Without Big: "+overall_withoutBig+" Cents ("+overall_withoutBig/newestDayValue+" pro Tag)\n\n");
         builder.insert(0,"ALL: "+ overall_all +" Cents ("+overall_all/newestDayValue+" pro Tag)\n");
-        builder.insert(0,"Big: "+ summed_cat[4] +" Cents ("+summed_cat[4]/newestDayValue+" pro Tag)\n\n");
-        builder.insert(0,"Other: "+ summed_cat[3] +" Cents ("+summed_cat[3]/newestDayValue+" pro Tag)\n");
-        builder.insert(0,"Move: "+ summed_cat[2] +" Cents ("+summed_cat[2]/newestDayValue+" pro Tag)\n");
-        builder.insert(0,"Living: "+ summed_cat[1] +" Cents ("+summed_cat[1]/newestDayValue+" pro Tag)\n");
-        builder.insert(0,"Food: "+ summed_cat[0] +" Cents ("+summed_cat[0]/newestDayValue+" pro Tag)\n");
-
-        // TODO Schleife machen
-        builder.append("\nImbiss/Kiosk/Späti: "+ summed_subs[0][0] +" Cents\n");
-        builder.append("Supermarkt/Laden: "+ summed_subs[0][1] +" Cents\n");
-        builder.append("ResBar: "+ summed_subs[0][2] +" Cents\n");
-        builder.append("Mensa: "+ summed_subs[0][3] +" Cents\n");
-        builder.append("Sonstiges Essen: "+ summed_subs[0][4] +" Cents\n");
-        builder.append("Flat: "+ summed_subs[1][0] +" Cents\n");
-        builder.append("Hostel: "+ summed_subs[1][1] +" Cents\n");
-        builder.append("Hotel: "+ summed_subs[1][2] +" Cents\n");
-        builder.append("AirBnB: "+ summed_subs[1][3] +" Cents\n");
-        builder.append("Sonstige Unterkünfte: "+ summed_subs[1][4] +" Cents\n");
-        builder.append("Entry: "+ summed_subs[2][0] +" Cents\n");
-        builder.append("Post: "+ summed_subs[2][1] +" Cents\n");
-        builder.append("Gift: "+ summed_subs[2][2] +" Cents\n");
-        builder.append("Clothes: "+ summed_subs[2][3] +" Cents\n");
-        builder.append("Hygiene: "+ summed_subs[2][4] +" Cents\n");
-        builder.append("Sonstiges Sonstiges: "+ summed_subs[2][5] +" Cents\n");
-        builder.append("Train"+ summed_subs[3][0] +" Cents\n");
-        builder.append("Bus: "+ summed_subs[3][1] +" Cents\n");
-        builder.append("Flug: "+ summed_subs[3][2] +" Cents\n");
-        builder.append("MFG: "+ summed_subs[3][3] +" Cents\n");
-        builder.append("Bike: "+ summed_subs[3][4] +" Cents\n");
-        builder.append("Sonstige Mittel: "+ summed_subs[3][5] +" Cents\n");
-        builder.append("Big: "+ summed_subs[4][0] +" Cents\n");
-        builder.append("Wage: "+ summed_subs[4][1] +" Cents\n");
-        builder.append("Bafoeg: "+ summed_subs[4][2] +" Cents\n");
-
-        for (int i = 0; i < summed_subs.length; i++){
-            for (int j = 0; j < summed_subs[i].length; j++)
-                builder.append(summed_subs[i][j]+ " ");
-            builder.append("\n");
+        for (int i = 0; i < summed_cat.length; i++) {
+            builder.insert(0,categories.get(i) + " " + summed_cat[i] +" Cents ("+summed_cat[i]/newestDayValue+" pro Tag)\n");
         }
+
+        for (int i = 0; i < summed_subs.length; i++) {
+            for (int j = 0; j < summed_subs[i].length; j++) {
+                builder.append(sub_categories.get(i).get(j) + ": " + summed_subs[i][j] + " Cents\n");
+            }
+        }
+
         txv_sumup11.setText(builder.toString());
 
         res.close();
     }
 
     public void onRbnGroupClick(View view) {
+        int checkedIndex = -1;
         if (rbn_f.isChecked()) {
-            //TODO aliases umschreiben
-            category = "Food";
-            subcategory = "IKS";
+            checkedIndex = 0;
             spi_description.setAdapter(adapter_subcategory1);
         }
         else if (rbn_l.isChecked()) {
-            category = "Living";
-            subcategory = "Flat";
+            checkedIndex = 1;
             spi_description.setAdapter(adapter_subcategory2);
         }
         else if (rbn_o.isChecked()){
-            category = "Other";
-            subcategory = "Entry";
+            checkedIndex = 2;
             spi_description.setAdapter(adapter_subcategory3);
         }
         else if (rbn_m.isChecked()){
-            category = "Move";
-            subcategory = "Train";
+            checkedIndex = 3;
             spi_description.setAdapter(adapter_subcategory4);
         }
         else if (rbn_b.isChecked()){
-            category = "Big";
-            subcategory = "Big";
+            checkedIndex = 4;
             spi_description.setAdapter(adapter_subcategory5);
         }
 
+        category = categories.get(checkedIndex);
+        subcategory = sub_categories.get(checkedIndex).get(0);
         updateInformation();
     }
 
@@ -727,15 +702,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //region Datepicker
+    public void onDateClick(View view) {
+        setDate();
+    }
+
     @SuppressWarnings("deprecation")
-    public void setDate(View view) {
+    public void setDate() {
         showDialog(999);
         Toast.makeText(getApplicationContext(), getString(R.string.choose_date), Toast.LENGTH_SHORT).show();
     }
 
     @Override
     protected Dialog onCreateDialog(int id) {
-        // TODO Auto-generated method stub
         if (id == 999) {
             return new DatePickerDialog(this, myDateListener, year, month, day);
         }
@@ -749,6 +727,11 @@ public class MainActivity extends AppCompatActivity {
             // arg2 = month
             // arg3 = day
             showDate(arg1, arg2+1, arg3);
+            //Ort wird fokussiert
+            edt_place.requestFocus();
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.showSoftInput(edt_place,InputMethodManager.SHOW_IMPLICIT);
+            edt_place.setSelection(edt_place.getText().length());
             updateInformation();
         }
     };
@@ -1018,4 +1001,6 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(MainActivity.this, myDB.exportDatabase("flomb.db"), Toast.LENGTH_LONG).show();
         }
     }
+
+    //TODO kein exit bei drehen des Handys
 }
