@@ -377,7 +377,9 @@ public class MainActivity extends AppCompatActivity {
                     edt_place.requestFocus();
 
                     InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    //TODO leite zu Datumsauswahl weiter, dann zu Place
                     imm.showSoftInput(edt_place,InputMethodManager.SHOW_IMPLICIT);
+                    edt_place.setSelection(edt_place.getText().length());
                     handled = true;
                 }
                 return handled;
@@ -406,12 +408,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 boolean handled = false;
-                //TODO füge ein, dass addData ausgeführt wird, wenn bei Amount enter gedrückt wird
                 if (actionId == EditorInfo.IME_ACTION_DONE){
                     InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(v.getWindowToken(),0);
                     amount=Integer.parseInt(edt_amount.getText().toString());
                     updateInformation();
+                    //TODO perform addable check
+                    insertToDB();
                     handled=true;
                 }
                 return handled;
@@ -421,10 +424,11 @@ public class MainActivity extends AppCompatActivity {
 
         SharedPreferences placeAndDate = getSharedPreferences("USER_PREFERENCES_PLACE_AND_DATE", MODE_PRIVATE);
         //TODO benutze diese gets für Èinstellung der Seite
-        placeAndDate.getString("PLACE","0");
-        placeAndDate.getInt("YEAR",2017);
-        placeAndDate.getInt("MONTH",7);
-        placeAndDate.getInt("DAY",5);
+        edt_place.setText(placeAndDate.getString("PLACE",""));
+        if (edt_place.getText().toString().equals("")) cbx_keepdata.setChecked(true);
+        int y = placeAndDate.getInt("YEAR",2017);
+        int m = placeAndDate.getInt("MONTH",7);
+        int d = placeAndDate.getInt("DAY",5);
     }
 
     public void onStatssetsClick(View view) { //navigates from Main Menu to Statistic's Settings Menu
@@ -516,6 +520,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void addData(View view){
+        insertToDB();
+    }
+
+    public void insertToDB () {
         boolean isInserted = myDB.insertData(amount,category,subcategory,edt_description.getText().toString(), dateYear, dateMonth, dateDay, edt_place.getText().toString());
         if (isInserted){
             Toast.makeText(MainActivity.this,getString(R.string.entry_added),Toast.LENGTH_LONG).show();
@@ -523,7 +531,6 @@ public class MainActivity extends AppCompatActivity {
         else Toast.makeText(MainActivity.this,getString(R.string.entry_not_added),Toast.LENGTH_LONG).show();
 
         //region Keep Data
-        //TODO reduzieren
         SharedPreferences placeAndDate = getSharedPreferences("USER_PREFERENCES_PLACE_AND_DATE", MODE_PRIVATE);
         SharedPreferences.Editor editor = placeAndDate.edit();
         if (cbx_keepdata.isChecked()){
@@ -548,6 +555,7 @@ public class MainActivity extends AppCompatActivity {
         editor.apply();
         updateFrontPage();
         //endregion
+
     }
 
     public void updateInformation(){
@@ -815,6 +823,7 @@ public class MainActivity extends AppCompatActivity {
         DateTime travelStart= new DateTime(2017,7,5,12,0,0,UTC);
         //TODO reduzieren!
         //TODO SQL Query mit allen Selections (schneller und schöner)
+        /*
         if (rbn_single.isChecked()){
             while (res.moveToNext()) {
                 DateTime checkDatedt = new DateTime(res.getInt(5), res.getInt(6), res.getInt(7), 13, 0, 0, UTC);
@@ -990,14 +999,14 @@ public class MainActivity extends AppCompatActivity {
             if (cbx_b.isChecked()){builderStats.append("Big: "+(overall_b-overall_b2)+" Cent ("+((overall_b/zeitspanne)-(overall_b2/zeitspanne2))+" pro Tag)\n");}
             builderStats.append("Auswahl addiert: "+(overall_all-overall_all2)+" Cent ("+((overall_all/zeitspanne)-(overall_all2/zeitspanne2))+" pro Tag)\n");
         }
-
+        */
         StringBuilder builder = new StringBuilder();
         builder.append(builderStats);
         builder.append("\n\n"+builderDetails);
         if (rbn_compare.isChecked()){builder.append("\n\n"+builderDetails2);}
         txv_statsdisplay.setText(builder);
     }
-
+    //TODO methode update entry hinzufügen
     public void onBackupDBClick(View view) {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED){
