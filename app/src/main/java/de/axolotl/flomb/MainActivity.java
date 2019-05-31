@@ -88,6 +88,7 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<ArrayList<String>> sub_categories;
     private int daysInbetween, date1from, date1to, date2from, date2to, newestDayValue;
     public ArrayAdapter<CharSequence> adapter_subcategory1, adapter_subcategory2, adapter_subcategory3, adapter_subcategory4, adapter_subcategory5;
+    public ArrayList<ArrayAdapter<CharSequence>> adapter_array;
     DatabaseHelper myDB;
     DatabaseHelperBackup myDBBackup;
 
@@ -296,27 +297,23 @@ public class MainActivity extends AppCompatActivity {
 
         rbn_f.setChecked(true);
 
-        adapter_subcategory1 = ArrayAdapter.createFromResource(this,
-                R.array.food_subcategories,android.R.layout.simple_spinner_item);
-        adapter_subcategory1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        adapter_array = new ArrayList<>();
+        adapter_array.add(ArrayAdapter.createFromResource(this,
+                R.array.food_subcategories,android.R.layout.simple_spinner_item));
+        adapter_array.add(ArrayAdapter.createFromResource(this,
+                R.array.living_subcategories,android.R.layout.simple_spinner_item));
+        adapter_array.add(ArrayAdapter.createFromResource(this,
+                R.array.other_subcategories,android.R.layout.simple_spinner_item));
+        adapter_array.add(ArrayAdapter.createFromResource(this,
+                R.array.move_subcategories,android.R.layout.simple_spinner_item));
+        adapter_array.add(ArrayAdapter.createFromResource(this,
+                R.array.big_subcategories,android.R.layout.simple_spinner_item));
 
-        adapter_subcategory2 = ArrayAdapter.createFromResource(this,
-                R.array.living_subcategories,android.R.layout.simple_spinner_item);
-        adapter_subcategory2.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        for (int i = 0; i < adapter_array.size(); i++) {
+            adapter_array.get(i).setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        }
 
-        adapter_subcategory3 = ArrayAdapter.createFromResource(this,
-                R.array.other_subcategories,android.R.layout.simple_spinner_item);
-        adapter_subcategory3.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
-        adapter_subcategory4 = ArrayAdapter.createFromResource(this,
-                R.array.move_subcategories,android.R.layout.simple_spinner_item);
-        adapter_subcategory4.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
-        adapter_subcategory5 = ArrayAdapter.createFromResource(this,
-                R.array.big_subcategories,android.R.layout.simple_spinner_item);
-        adapter_subcategory5.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
-        spi_description.setAdapter(adapter_subcategory1);
+        spi_description.setAdapter(adapter_array.get(0));
         spi_description.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -340,7 +337,7 @@ public class MainActivity extends AppCompatActivity {
         btn_back.setVisibility(View.VISIBLE);
 
         rbn_f.setChecked(true);
-        spi_description.setAdapter(adapter_subcategory1);
+        spi_description.setAdapter(adapter_array.get(0));
         category=categories.get(0);
         subcategory=sub_categories.get(0).get(0);
 
@@ -673,25 +670,21 @@ public class MainActivity extends AppCompatActivity {
         int checkedIndex = -1;
         if (rbn_f.isChecked()) {
             checkedIndex = 0;
-            spi_description.setAdapter(adapter_subcategory1);
         }
         else if (rbn_l.isChecked()) {
             checkedIndex = 1;
-            spi_description.setAdapter(adapter_subcategory2);
         }
         else if (rbn_o.isChecked()){
             checkedIndex = 2;
-            spi_description.setAdapter(adapter_subcategory3);
         }
         else if (rbn_m.isChecked()){
             checkedIndex = 3;
-            spi_description.setAdapter(adapter_subcategory4);
         }
         else if (rbn_b.isChecked()){
             checkedIndex = 4;
-            spi_description.setAdapter(adapter_subcategory5);
         }
 
+        spi_description.setAdapter(adapter_array.get(checkedIndex));
         category = categories.get(checkedIndex);
         subcategory = sub_categories.get(checkedIndex).get(0);
         updateInformation();
@@ -743,10 +736,10 @@ public class MainActivity extends AppCompatActivity {
         DateTime addDatedt = new DateTime(year,month,day,13,0,0,UTC);
 
         daysInbetween=Days.daysBetween(travelStart.toLocalDateTime(),addDatedt.toLocalDateTime()).getDays();
-        dateAdd=(day+"."+month+"."+year+" ("+daysInbetween+")");
-        dateYear=year;
-        dateMonth=month;
-        dateDay=day;
+        dateAdd = (day+"."+month+"."+year+" ("+daysInbetween+")");
+        dateYear = year;
+        dateMonth = month;
+        dateDay = day;
     }
     //endregion
 
@@ -1003,4 +996,5 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //TODO kein exit bei drehen des Handys
+    //TODO delete last entry function + button
 }
