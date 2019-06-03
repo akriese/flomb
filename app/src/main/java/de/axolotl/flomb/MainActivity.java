@@ -87,8 +87,8 @@ public class MainActivity extends AppCompatActivity {
 
     private ArrayList<ArrayList<String>> sub_categories;
     private int daysInbetween, date1from, date1to, date2from, date2to, newestDayValue;
-    public ArrayAdapter<CharSequence> adapter_subcategory1, adapter_subcategory2, adapter_subcategory3, adapter_subcategory4, adapter_subcategory5;
     public ArrayList<ArrayAdapter<CharSequence>> adapter_array;
+    public ArrayList<RadioButton> rbn_list;
     DatabaseHelper myDB;
     DatabaseHelperBackup myDBBackup;
 
@@ -295,7 +295,6 @@ public class MainActivity extends AppCompatActivity {
         summed_subs[4] = new int[big_subcategories.size()];
         summed_cat = new int[categories.size()];
 
-        rbn_f.setChecked(true);
 
         adapter_array = new ArrayList<>();
         adapter_array.add(ArrayAdapter.createFromResource(this,
@@ -312,6 +311,13 @@ public class MainActivity extends AppCompatActivity {
         for (int i = 0; i < adapter_array.size(); i++) {
             adapter_array.get(i).setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         }
+
+        rbn_list = new ArrayList<>();
+        rbn_list.add(rbn_f);
+        rbn_list.add(rbn_l);
+        rbn_list.add(rbn_o);
+        rbn_list.add(rbn_m);
+        rbn_list.add(rbn_b);
 
         spi_description.setAdapter(adapter_array.get(0));
         spi_description.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -335,11 +341,6 @@ public class MainActivity extends AppCompatActivity {
         rll_add.setVisibility(View.VISIBLE);
         rll_start.setVisibility(View.INVISIBLE);
         btn_back.setVisibility(View.VISIBLE);
-
-        rbn_f.setChecked(true);
-        spi_description.setAdapter(adapter_array.get(0));
-        category=categories.get(0);
-        subcategory=sub_categories.get(0).get(0);
 
         //region EditText Listener
         edt_amount.addTextChangedListener(new TextWatcher() {
@@ -419,13 +420,18 @@ public class MainActivity extends AppCompatActivity {
         });
         //endregion
 
-        SharedPreferences placeAndDate = getSharedPreferences("USER_PREFERENCES_PLACE_AND_DATE", MODE_PRIVATE);
+        SharedPreferences prefGetter = getSharedPreferences("USER_PREFERENCES_ADD", MODE_PRIVATE);
         //TODO benutze diese gets für Èinstellung der Seite
-        edt_place.setText(placeAndDate.getString("PLACE",""));
+        int checked_rbn = prefGetter.getInt("RBN", 0);
+        rbn_list.get(checked_rbn).setChecked(true);
+        spi_description.setAdapter(adapter_array.get(checked_rbn));
+        category=categories.get(checked_rbn);
+        subcategory=sub_categories.get(checked_rbn).get(0);
+        edt_place.setText(prefGetter.getString("PLACE",""));
         if (edt_place.getText().toString().equals("")) cbx_keepdata.setChecked(true);
-        int y = placeAndDate.getInt("YEAR",2017);
-        int m = placeAndDate.getInt("MONTH",7);
-        int d = placeAndDate.getInt("DAY",5);
+        int y = prefGetter.getInt("YEAR",2017);
+        int m = prefGetter.getInt("MONTH",7);
+        int d = prefGetter.getInt("DAY",5);
     }
 
     public void onStatssetsClick(View view) { //navigates from Main Menu to Statistic's Settings Menu
@@ -472,6 +478,7 @@ public class MainActivity extends AppCompatActivity {
         if (rll_add.getVisibility()==View.VISIBLE){
             rll_add.setVisibility(View.INVISIBLE);
             rll_start.setVisibility(View.VISIBLE);
+            keepData();
         }
         if (rll_statssets.getVisibility()==View.VISIBLE){
             rll_statssets.setVisibility(View.INVISIBLE);
@@ -550,33 +557,7 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(MainActivity.this,getString(R.string.entry_added),Toast.LENGTH_LONG).show();
         }
         else Toast.makeText(MainActivity.this,getString(R.string.entry_not_added),Toast.LENGTH_LONG).show();
-
-        //region Keep Data
-        SharedPreferences placeAndDate = getSharedPreferences("USER_PREFERENCES_PLACE_AND_DATE", MODE_PRIVATE);
-        SharedPreferences.Editor editor = placeAndDate.edit();
-        if (cbx_keepdata.isChecked()){
-            editor.putString("PLACE",edt_place.getText().toString());
-            //eingegebenes Datum
-            editor.putInt("YEAR",dateYear);
-            editor.putInt("MONTH",dateMonth);
-            editor.putInt("DAY",dateDay);
-        }
-        else {
-            editor.putString("PLACE","");
-            //heutiges Datum
-            editor.putInt("YEAR",year);
-            editor.putInt("MONTH",month);
-            editor.putInt("DAY",day);
-
-            edt_description.setText("");
-            edt_place.setText("");
-            btn_datepicker.setText(getString(R.string.date));
-            cbx_minus.setChecked(false);
-        }
-        editor.apply();
-        updateFrontPage();
-        //endregion
-
+        keepData();
     }
 
     public void updateInformation(){
@@ -622,6 +603,8 @@ public class MainActivity extends AppCompatActivity {
 
             DateTime addDatedt = new DateTime(res.getInt(5),res.getInt(6),res.getInt(7),13,0,0,UTC);
             daysInbetween=Days.daysBetween(travelStart.toLocalDateTime(),addDatedt.toLocalDateTime()).getDays();
+            //TODO set maximum count of lines to be shown
+            //über ID von einträgen?
             builder.insert(0, res.getInt(1) + getString(R.string.für) + res.getString(4)
                     +" ("+kurz+", "+ res.getString(3)+")" + getString(R.string.am) + res.getInt(7)+"."
                     +res.getInt(6)+". ("+daysInbetween+", "+res.getInt(0)+") " + getString(R.string.in) +kurzOrt+"\n");
@@ -650,10 +633,12 @@ public class MainActivity extends AppCompatActivity {
         overall_withoutBig=overall_all-summed_cat[4];
 
         builder.insert(0,"Without Big: "+overall_withoutBig+" Cents ("+overall_withoutBig/newestDayValue+" pro Tag)\n\n");
-        builder.insert(0,"ALL: "+ overall_all +" Cents ("+overall_all/newestDayValue+" pro Tag)\n");
+        builder.insert(0,"\nALL: "+ overall_all +" Cents ("+overall_all/newestDayValue+" pro Tag)\n");
         for (int i = 0; i < summed_cat.length; i++) {
             builder.insert(0,categories.get(i) + " " + summed_cat[i] +" Cents ("+summed_cat[i]/newestDayValue+" pro Tag)\n");
         }
+
+        builder.append("\n");
 
         for (int i = 0; i < summed_subs.length; i++) {
             for (int j = 0; j < summed_subs[i].length; j++) {
@@ -728,6 +713,7 @@ public class MainActivity extends AppCompatActivity {
             updateInformation();
         }
     };
+
     private void showDate(int year, int month, int day) {
         btn_datepicker.setText(new StringBuilder().append(day).append(".")
                 .append(month).append(".").append(year));
@@ -750,6 +736,42 @@ public class MainActivity extends AppCompatActivity {
         } else {
             Toast.makeText(MainActivity.this,R.string.data_n_del, Toast.LENGTH_LONG).show();
         }
+    }
+
+    //region helper functions
+    public void keepData(){
+        SharedPreferences placeAndDate = getSharedPreferences("USER_PREFERENCES_ADD", MODE_PRIVATE);
+        SharedPreferences.Editor editor = placeAndDate.edit();
+        if (cbx_keepdata.isChecked()){
+            editor.putString("PLACE",edt_place.getText().toString());
+            //eingegebenes Datum
+            editor.putInt("RBN", getIndexOfCheckedRbn(rbn_list));
+            editor.putInt("YEAR",dateYear);
+            editor.putInt("MONTH",dateMonth);
+            editor.putInt("DAY",dateDay);
+        }
+        else {
+            editor.putString("PLACE","");
+            editor.putInt("RBN",0);
+            //heutiges Datum
+            editor.putInt("YEAR",year);
+            editor.putInt("MONTH",month);
+            editor.putInt("DAY",day);
+
+            edt_description.setText("");
+            edt_place.setText("");
+            btn_datepicker.setText(getString(R.string.date));
+            cbx_minus.setChecked(false);
+        }
+        editor.apply();
+        updateFrontPage();
+    }
+
+    public int getIndexOfCheckedRbn(ArrayList<RadioButton> list){
+        for (int i = 0; i < list.size(); i++) {
+            if (list.get(i).isChecked()) return i;
+        }
+        return 0;
     }
 
     public void onRbnStatsClick(View view) {
@@ -982,7 +1004,7 @@ public class MainActivity extends AppCompatActivity {
         if (rbn_compare.isChecked()){builder.append("\n\n"+builderDetails2);}
         txv_statsdisplay.setText(builder);
     }
-    //TODO methode update entry hinzufügen
+
     public void onBackupDBClick(View view) {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED){
@@ -994,7 +1016,9 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(MainActivity.this, myDB.exportDatabase("flomb.db"), Toast.LENGTH_LONG).show();
         }
     }
+    //endregion
 
+    //TODO methode update entry hinzufügen
     //TODO kein exit bei drehen des Handys
     //TODO delete last entry function + button
 }
