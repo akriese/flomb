@@ -14,10 +14,13 @@
     <string name="until">&#160;bis einschließlich dem&#160;</string>
     <string name="showed">&#160;angezeigt!\n</string>
     <string name="statistics">Stats</string>
+    <string name="update_entry">Update Entry</string>
+    <string name="delete_entry">Delete Entry</string>
     <string name="data_del">Data deleted!</string>
     <string name="missing_data">Es fehlen Informationen! (nicht hinzugefügt)</string>
     <string name="settings">Einstellungen</string>
     <string name="data_n_del">Data not deleted!</string>
+    <string name="id_not_available">Eintrag nicht vorhanden!</string>
     <string name="choose_category">Kategorie auswählen!</string>
     <string name="choose_date">Datum auswählen!</string>
     <string name="description">Beschreibung</string>

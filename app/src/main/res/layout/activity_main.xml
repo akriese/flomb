@@ -355,25 +355,32 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/lnl_deleteRow"
+            android:id="@+id/lnl_editRow"
             android:weightSum="1">
 
             <EditText
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:hint="ID"
-                android:id="@+id/edt_deleteRowId"
+                android:id="@+id/edt_editRowId"
                 android:inputType="numberDecimal"
-                android:layout_weight="0.6"/>
+                android:layout_weight="0.4"/>
 
             <Button
-                android:id="@+id/btn_resetLastEntry"
+                android:id="@+id/btn_resetEntry"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
-                android:text="Eintrag zurücksetzen"
+                android:text="@string/delete_entry"
                 android:onClick="onResetChosenClick"
-                android:layout_centerHorizontal="false"
-                android:layout_weight="0.4"/>
+                android:layout_weight="0.3"/>
+
+            <Button
+                android:id="@+id/btn_updateEntry"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="@string/update_entry"
+                android:onClick="onUpdateClick"
+                android:layout_weight="0.3"/>
 
         </LinearLayout>
 
@@ -384,7 +391,7 @@
             android:text="Backup DB"
             android:onClick="onBackupDBClick"
             android:layout_centerHorizontal="true"
-            android:layout_below="@id/lnl_deleteRow"/>
+            android:layout_below="@id/lnl_editRow"/>
 
     </RelativeLayout>
 

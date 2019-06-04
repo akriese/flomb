@@ -84,10 +84,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         int toY = to.getYear();
         int toM = to.getMonthOfYear();
         int toD = to.getDayOfMonth();
-
+        //1. Fall: zwischen Jahren
+        //2. Fall: in frY, M gr. als frM, analog für toY, toM
+        //3. Fall: in frY, frM, D gr. gl. frD, analog für toY, toM
+        String selectionDate = COL_5 + " BETWEEN " + frY + " AND " + toY + " AND " ;
         SQLiteDatabase db = this.getWritableDatabase();
-        Cursor res = db.rawQuery("select * from "+TABLE_NAME+" where ",null);
+        Cursor res = db.rawQuery("select * from "+TABLE_NAME+" ",null);
         return res;
+    }
+
+    public Cursor searchForUpdateEntry(int id){
+        SQLiteDatabase db = this.getWritableDatabase();
+        return db.rawQuery("SELECT * FROM "+ TABLE_NAME + " where " + COL_0 + "=" + id, null);
     }
 
     public void clearDatabase(){

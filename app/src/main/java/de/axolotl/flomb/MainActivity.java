@@ -11,6 +11,7 @@ import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.opengl.Visibility;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
@@ -61,12 +62,12 @@ public class MainActivity extends AppCompatActivity {
     public static String PACKAGE_NAME;
 
     //region Android ELemente
-    public Button btn_addfinal, btn_add, btn_statssets, btn_datepicker, btn_back, btn_settings, btn_resetLastEntry;
-    public EditText edt_place, edt_description, edt_amount, edt_deleteRowId;
+    public Button btn_addfinal, btn_add, btn_statssets, btn_datepicker, btn_back, btn_settings, btn_resetEntry, btn_updateEntry;
+    public EditText edt_place, edt_description, edt_amount, edt_editRow;
     public TextView txv_headline, txv_addsumup, txv_sumup11, txv_statssetsumup, txv_statsdisplay;
     public RadioButton rbn_f, rbn_l, rbn_o, rbn_m, rbn_b, rbn_single, rbn_compare, rbn_change;
     public CheckBox cbx_keepdata, cbx_minus, cbx_f, cbx_a, cbx_t, cbx_o, cbx_b;
-    public LinearLayout lnl_description, lnl_dateplace, lnl_cbxfateb, lnl_deleteRow;
+    public LinearLayout lnl_description, lnl_dateplace, lnl_cbxfateb, lnl_editRow;
     public RelativeLayout rll_add, rll_start, rll_statssets, rll_settings, rll_stats;
     public ScrollView scv_sumup1;
     public Spinner spi_description;
@@ -249,9 +250,10 @@ public class MainActivity extends AppCompatActivity {
         //endregion
         //region settings
         rll_settings = findViewById(R.id.rll_settings);
-        lnl_deleteRow = findViewById(R.id.lnl_deleteRow);
-        btn_resetLastEntry = findViewById(R.id.btn_resetLastEntry);
-        edt_deleteRowId = findViewById(R.id.edt_deleteRowId);
+        lnl_editRow = findViewById(R.id.lnl_editRow);
+        btn_resetEntry = findViewById(R.id.btn_resetEntry);
+        btn_updateEntry = findViewById(R.id.btn_updateEntry);
+        edt_editRow = findViewById(R.id.edt_editRowId);
         //endregion
         //region stats
         rll_stats = findViewById(R.id.rll_stats);
@@ -339,7 +341,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //region Main Movements
-    public void onAddClick(View view) throws IOException { //navigates from Main Menu to Add Menu
+    public void goToAddLayout(){
         rll_add.setVisibility(View.VISIBLE);
         rll_start.setVisibility(View.INVISIBLE);
         btn_back.setVisibility(View.VISIBLE);
@@ -421,6 +423,10 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         //endregion
+    }
+
+    public void onAddClick(View view) { //navigates from Main Menu to Add Menu
+        goToAddLayout();
 
         SharedPreferences prefGetter = getSharedPreferences("USER_PREFERENCES_ADD", MODE_PRIVATE);
         //TODO benutze diese gets für Èinstellung der Seite
@@ -512,12 +518,12 @@ public class MainActivity extends AppCompatActivity {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setMessage("Wanna exit, biiitch?")
                     .setCancelable(false)
-                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    .setPositiveButton("Hell yeah!", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
                             MainActivity.this.finish();
                         }
                     })
-                    .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    .setNegativeButton("Nope!", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
                             dialog.cancel();
                         }
@@ -584,7 +590,7 @@ public class MainActivity extends AppCompatActivity {
         description = edt_description.getText().toString();
         place = edt_place.getText().toString();
 
-        txv_addsumup.setText(amount+getString(R.string.für)+description+","+getString(R.string.für)+dateAdd+","+getString(R.string.in)+place);
+        txv_addsumup.setText(amount+getString(R.string.für)+description+","+getString(R.string.am)+dateAdd+","+getString(R.string.in)+place);
     }
 
     public void updateFrontPage(){ //getAllData
@@ -745,7 +751,7 @@ public class MainActivity extends AppCompatActivity {
     //endregion
 
     public void onResetChosenClick(View view) {
-        Integer deletedRows = myDB.deleteData(edt_deleteRowId.getText().toString());
+        Integer deletedRows = myDB.deleteData(edt_editRow.getText().toString());
         if (deletedRows > 0){
             Toast.makeText(MainActivity.this,R.string.data_del, Toast.LENGTH_LONG).show();
         } else {
@@ -1032,6 +1038,56 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     //endregion
+
+    public void onUpdateClick(View view) {
+        int updatedEntry = Integer.parseInt(edt_editRow.getText().toString());
+        Cursor res = myDB.searchForUpdateEntry(updatedEntry);
+        edt_editRow.setText("");
+        if (res.getCount() == 0){
+            Toast.makeText(MainActivity.this,getString(R.string.id_not_available),Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        rll_settings.setVisibility(View.INVISIBLE);
+        goToAddLayout();
+        txv_headline.setText("Update");
+
+        res.moveToNext();
+
+        //set rbn
+        category = res.getString(2);
+        int catIndex = categories.indexOf(category);
+        rbn_list.get(catIndex).setChecked(true);
+
+        //set sub_cat
+        //set var
+        subcategory = res.getString(3);
+        spi_description.setAdapter(adapter_array.get(catIndex));
+        spi_description.setSelection(sub_categories.get(catIndex).indexOf(subcategory));
+
+        //set date
+        //TODO set var
+
+
+        //set Description, place, amount
+        description = res.getString(4);
+        place = res.getString(8);
+        edt_description.setText(description);
+        edt_place.setText(place);
+        amount = res.getInt(1);
+        edt_amount.setText(Integer.toString(Math.abs(amount)));
+
+
+        //set cbx_minus
+        if (amount<0){
+            cbx_minus.setChecked(true);
+        } else cbx_minus.setChecked(false);
+
+        updateInformation();
+
+        //update entry, go back to settings layout
+
+    }
 
     //TODO methode update entry hinzufügen
     //TODO kein exit bei drehen des Handys
