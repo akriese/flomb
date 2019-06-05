@@ -2,6 +2,8 @@
     <string name="app_name">FLOMB</string>
     <string name="entry_added">Eintrag hinzugefügt!</string>
     <string name="entry_not_added">Eintrag nicht hinzugefügt!</string>
+    <string name="entry_updated">Eintrag geupdated!</string>
+    <string name="entry_not_updated">Eintrag nicht geupdated!</string>
     <string name="date">Datum</string>
     <string name="für">&#160;für&#160;</string>
     <string name="am">&#160;am&#160;</string>

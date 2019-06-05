@@ -111,8 +111,9 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/btn_datepcker"
                 android:text="@string/date"
-                android:onClick="onDateClick"
                 android:layout_weight="0.1"/>
+                <!-- android:onClick="onDateClick" -->
+
 
             <EditText
                 android:layout_width="wrap_content"

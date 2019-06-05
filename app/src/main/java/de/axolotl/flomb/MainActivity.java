@@ -57,7 +57,7 @@ import java.util.Calendar;
 import java.util.ListIterator;
 import java.util.stream.IntStream;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements DatePickerDialog.OnDateSetListener{
 
     public static String PACKAGE_NAME;
 
@@ -77,11 +77,12 @@ public class MainActivity extends AppCompatActivity {
     //region other Elements and variables
     private int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE=0;
     private Calendar calendar;
-    private int year, month, day, amount=0, dateYear, dateMonth, dateDay;
+    private int nowYear, nowMonth, nowDay, amount=0, dateYear, dateMonth, dateDay, id;
     private int overall_all, overall_withoutBig;
     private int overall_f2=0,overall_a2=0,overall_t2=0,overall_o2=0,overall_b2=0, overall_all2;
     private int[][] summed_subs;
     private int[] summed_cat;
+    private boolean update_dialog=false;
     private String description="Beschreibung", category, subcategory, place;
     private DatePicker datepicker;
     private String dateAdd, dateString, date1fromString, date1toString, date2fromString, date2toString;
@@ -265,9 +266,9 @@ public class MainActivity extends AppCompatActivity {
         myDBBackup = new DatabaseHelperBackup(this);
 
         calendar = Calendar.getInstance();
-        year = calendar.get(Calendar.YEAR);
-        month = calendar.get(Calendar.MONTH);
-        day = calendar.get(Calendar.DAY_OF_MONTH);
+        nowYear = calendar.get(Calendar.YEAR);
+        nowMonth = calendar.get(Calendar.MONTH);
+        nowDay = calendar.get(Calendar.DAY_OF_MONTH);
 
         rll_add.setVisibility(View.INVISIBLE);
         rll_statssets.setVisibility(View.INVISIBLE);
@@ -336,6 +337,13 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        btn_datepicker.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                showDatePickerDialog();
+            }
+        });
+
         updateFrontPage();
         PACKAGE_NAME = getApplicationContext().getPackageName();
     }
@@ -345,7 +353,7 @@ public class MainActivity extends AppCompatActivity {
         rll_add.setVisibility(View.VISIBLE);
         rll_start.setVisibility(View.INVISIBLE);
         btn_back.setVisibility(View.VISIBLE);
-
+        cbx_minus.setChecked(false);
         //region EditText Listener
         edt_amount.addTextChangedListener(new TextWatcher() {
             @Override
@@ -377,7 +385,7 @@ public class MainActivity extends AppCompatActivity {
                 boolean handled = false;
                 if (actionId == EditorInfo.IME_ACTION_NEXT){
                     //switched zu Datumsauwahl
-                    setDate();
+                    showDatePickerDialog();
                     updateInformation();
                     handled = true;
                 }
@@ -413,10 +421,7 @@ public class MainActivity extends AppCompatActivity {
                 if (actionId == EditorInfo.IME_ACTION_DONE){
                     InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(v.getWindowToken(),0);
-                    updateInformation();
-                    if (checkAddData())
-                        insertToDB();
-                    else Toast.makeText(MainActivity.this,getString(R.string.missing_data),Toast.LENGTH_LONG).show();
+                    addOrUpdate();
                     handled=true;
                 }
                 return handled;
@@ -427,19 +432,21 @@ public class MainActivity extends AppCompatActivity {
 
     public void onAddClick(View view) { //navigates from Main Menu to Add Menu
         goToAddLayout();
-
+        txv_headline.setText(R.string.add);
+        btn_addfinal.setText(R.string.add);
+        update_dialog = false;
         SharedPreferences prefGetter = getSharedPreferences("USER_PREFERENCES_ADD", MODE_PRIVATE);
-        //TODO benutze diese gets für Èinstellung der Seite
+
         int checked_rbn = prefGetter.getInt("RBN", 0);
         rbn_list.get(checked_rbn).setChecked(true);
         spi_description.setAdapter(adapter_array.get(checked_rbn));
-        category=categories.get(checked_rbn);
-        subcategory=sub_categories.get(checked_rbn).get(0);
+        category = categories.get(checked_rbn);
+        subcategory = sub_categories.get(checked_rbn).get(0);
         edt_place.setText(prefGetter.getString("PLACE",""));
         if (edt_place.getText().toString().equals("")) cbx_keepdata.setChecked(true);
-        int y = prefGetter.getInt("YEAR",2017);
-        int m = prefGetter.getInt("MONTH",7);
-        int d = prefGetter.getInt("DAY",5);
+        dateYear = prefGetter.getInt("YEAR", Calendar.getInstance().get(Calendar.YEAR));
+        dateMonth = prefGetter.getInt("MONTH", Calendar.getInstance().get(Calendar.MONTH));
+        dateDay = prefGetter.getInt("DAY", Calendar.getInstance().get(Calendar.DAY_OF_MONTH));
     }
 
     public void onStatssetsClick(View view) { //navigates from Main Menu to Statistic's Settings Menu
@@ -558,9 +565,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void addData(View view){
+        addOrUpdate();
+    }
+
+    public void addOrUpdate(){
         updateInformation();
         if (checkAddData())
-            insertToDB();
+            if (!update_dialog) insertToDB();
+            else updateDB();
         else Toast.makeText(MainActivity.this,getString(R.string.missing_data),Toast.LENGTH_LONG).show();
     }
 
@@ -579,6 +591,15 @@ public class MainActivity extends AppCompatActivity {
         }
         else Toast.makeText(MainActivity.this,getString(R.string.entry_not_added),Toast.LENGTH_LONG).show();
         keepData();
+    }
+
+    public void updateDB () {
+        boolean isInserted = myDB.updateData(id, amount, category, subcategory, description, dateYear, dateMonth, dateDay, place);
+        if (isInserted){
+            Toast.makeText(MainActivity.this,getString(R.string.entry_updated),Toast.LENGTH_LONG).show();
+        }
+        else Toast.makeText(MainActivity.this,getString(R.string.entry_not_updated),Toast.LENGTH_LONG).show();
+        goBack();
     }
 
     public void updateInformation(){
@@ -701,40 +722,27 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //region Datepicker
-    public void onDateClick(View view) {
-        setDate();
-    }
-
-    @SuppressWarnings("deprecation")
-    public void setDate() {
-        showDialog(999);
+    public void showDatePickerDialog(){
+        DatePickerDialog datePickerDialog = new DatePickerDialog(this,this, dateYear, dateMonth-1, dateDay);
         Toast.makeText(getApplicationContext(), getString(R.string.choose_date), Toast.LENGTH_SHORT).show();
+        datePickerDialog.show();
     }
 
     @Override
-    protected Dialog onCreateDialog(int id) {
-        if (id == 999) {
-            return new DatePickerDialog(this, myDateListener, year, month, day);
-        }
-        return null;
+    public void onDateSet(DatePicker arg0, int arg1, int arg2, int arg3) {
+        // arg1 = year
+        // arg2 = month
+        // arg3 = day
+        showDate(arg1, arg2+1, arg3);
+        //Ort wird fokussiert
+        edt_place.requestFocus();
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.showSoftInput(edt_place,InputMethodManager.SHOW_IMPLICIT);
+        edt_place.setSelection(edt_place.getText().length());
+        updateInformation();
     }
 
-    private DatePickerDialog.OnDateSetListener myDateListener = new DatePickerDialog.OnDateSetListener() {
-        @Override
-        public void onDateSet(DatePicker arg0, int arg1, int arg2, int arg3) {
-            // arg1 = year
-            // arg2 = month
-            // arg3 = day
-            showDate(arg1, arg2+1, arg3);
-            //Ort wird fokussiert
-            edt_place.requestFocus();
-            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-            imm.showSoftInput(edt_place,InputMethodManager.SHOW_IMPLICIT);
-            edt_place.setSelection(edt_place.getText().length());
-            updateInformation();
-        }
-    };
-
+    //set Button text and sets variables for adding
     private void showDate(int year, int month, int day) {
         btn_datepicker.setText(new StringBuilder().append(day).append(".")
                 .append(month).append(".").append(year));
@@ -751,7 +759,13 @@ public class MainActivity extends AppCompatActivity {
     //endregion
 
     public void onResetChosenClick(View view) {
-        Integer deletedRows = myDB.deleteData(edt_editRow.getText().toString());
+        int deletedRows = 0;
+        if (edt_editRow.getText().toString().equals("")) {
+            //TODO delete last entry
+            myDB.deleteData("-1");
+        }
+        else deletedRows = myDB.deleteData(edt_editRow.getText().toString());
+        //TODO delete dialog, asking
         if (deletedRows > 0){
             Toast.makeText(MainActivity.this,R.string.data_del, Toast.LENGTH_LONG).show();
         } else {
@@ -775,9 +789,9 @@ public class MainActivity extends AppCompatActivity {
             editor.putString("PLACE","");
             editor.putInt("RBN",0);
             //heutiges Datum
-            editor.putInt("YEAR",year);
-            editor.putInt("MONTH",month);
-            editor.putInt("DAY",day);
+            editor.putInt("YEAR",nowYear);
+            editor.putInt("MONTH",nowMonth);
+            editor.putInt("DAY",nowDay);
 
             edt_description.setText("");
             edt_place.setText("");
@@ -1040,17 +1054,18 @@ public class MainActivity extends AppCompatActivity {
     //endregion
 
     public void onUpdateClick(View view) {
-        int updatedEntry = Integer.parseInt(edt_editRow.getText().toString());
-        Cursor res = myDB.searchForUpdateEntry(updatedEntry);
+        id = Integer.parseInt(edt_editRow.getText().toString());
+        Cursor res = myDB.searchForUpdateEntry(id);
         edt_editRow.setText("");
         if (res.getCount() == 0){
             Toast.makeText(MainActivity.this,getString(R.string.id_not_available),Toast.LENGTH_LONG).show();
             return;
         }
-
+        update_dialog = true;
         rll_settings.setVisibility(View.INVISIBLE);
         goToAddLayout();
-        txv_headline.setText("Update");
+        txv_headline.setText(R.string.update_entry);
+        btn_addfinal.setText(R.string.update_entry);
 
         res.moveToNext();
 
@@ -1066,8 +1081,12 @@ public class MainActivity extends AppCompatActivity {
         spi_description.setSelection(sub_categories.get(catIndex).indexOf(subcategory));
 
         //set date
-        //TODO set var
+        dateYear = res.getInt(5);
+        dateMonth = res.getInt(6);
+        dateDay = res.getInt(7);
 
+        btn_datepicker.setText(new StringBuilder().append(dateDay).append(".")
+                .append(dateMonth).append(".").append(dateYear));
 
         //set Description, place, amount
         description = res.getString(4);
@@ -1075,13 +1094,12 @@ public class MainActivity extends AppCompatActivity {
         edt_description.setText(description);
         edt_place.setText(place);
         amount = res.getInt(1);
+        //set cbx_minus
+        cbx_minus.setChecked(amount<0);
         edt_amount.setText(Integer.toString(Math.abs(amount)));
 
-
-        //set cbx_minus
-        if (amount<0){
-            cbx_minus.setChecked(true);
-        } else cbx_minus.setChecked(false);
+        //amount parity gets updated in updateInformation()
+        //amount = Math.abs(amount);
 
         updateInformation();
 
@@ -1089,7 +1107,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    //TODO methode update entry hinzufügen
+    //TODO datepicker statt slider bei statistik
     //TODO kein exit bei drehen des Handys
     //TODO delete last entry function + button
 }

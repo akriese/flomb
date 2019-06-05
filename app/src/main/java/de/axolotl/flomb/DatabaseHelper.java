@@ -66,8 +66,22 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         contentValues.put(COL_8,place);
         long result = db.insert(TABLE_NAME,null,contentValues);
 
-        if (result==-1)return false;
-        else return true;
+        return !(result==-1);
+    }
+
+    public boolean updateData(int id, int amount, String category, String subcategory, String description, int dateYear, int dateMonth, int dateDay, String place){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(COL_1,amount);
+        contentValues.put(COL_2,category);
+        contentValues.put(COL_3,subcategory);
+        contentValues.put(COL_4,description);
+        contentValues.put(COL_5,dateYear);
+        contentValues.put(COL_6,dateMonth);
+        contentValues.put(COL_7,dateDay);
+        contentValues.put(COL_8,place);
+        long result = db.update(TABLE_NAME, contentValues, "ID = ?", new String[] {Integer.toString(id)});
+        return !(result==-1);
     }
 
     public Cursor getAllData(){
