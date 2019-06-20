@@ -267,7 +267,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
         calendar = Calendar.getInstance();
         nowYear = calendar.get(Calendar.YEAR);
-        nowMonth = calendar.get(Calendar.MONTH);
+        nowMonth = calendar.get(Calendar.MONTH)+1; //begint bei 0 januar
         nowDay = calendar.get(Calendar.DAY_OF_MONTH);
 
         rll_add.setVisibility(View.INVISIBLE);
