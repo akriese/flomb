@@ -441,6 +441,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         rbn_list.get(checked_rbn).setChecked(true);
         spi_description.setAdapter(adapter_array.get(checked_rbn));
         category = categories.get(checked_rbn);
+        //TODO save subcategory and display correctly
         subcategory = sub_categories.get(checked_rbn).get(0);
         edt_place.setText(prefGetter.getString("PLACE",""));
         if (edt_place.getText().toString().equals("")) cbx_keepdata.setChecked(true);
@@ -781,6 +782,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
             editor.putString("PLACE",edt_place.getText().toString());
             //eingegebenes Datum
             editor.putInt("RBN", getIndexOfCheckedRbn(rbn_list));
+            //TODO subcat
             editor.putInt("YEAR",dateYear);
             editor.putInt("MONTH",dateMonth);
             editor.putInt("DAY",dateDay);
@@ -1110,4 +1112,5 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     //TODO datepicker statt slider bei statistik
     //TODO kein exit bei drehen des Handys
     //TODO delete last entry function + button
+    //TODO suche ermöglichen
 }
