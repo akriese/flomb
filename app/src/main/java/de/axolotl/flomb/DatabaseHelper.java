@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Environment;
+import android.util.Log;
 import android.widget.Toast;
 
 import org.joda.time.DateTime;
@@ -17,6 +18,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Locale;
 
 /**
  * Created by Anton on 12.02.2017.
@@ -35,6 +38,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COL_6 = "MONTH";
     public static final String COL_7 = "DAY";
     public static final String COL_8 = "PLACE";
+    public static final String COL_9 = "DATESTR";
 
 
     public DatabaseHelper(Context context) {
@@ -43,7 +47,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL("create table "+TABLE_NAME+" ("+COL_0+" INTEGER PRIMARY KEY AUTOINCREMENT,"+COL_1+" INTEGER,"+COL_2+" TEXT,"+
+        db.execSQL("CREATE TABLE "+TABLE_NAME+" ("+COL_0+" INTEGER PRIMARY KEY AUTOINCREMENT,"+COL_1+" INTEGER,"+COL_2+" TEXT,"+
         COL_3+" TEXT,"+COL_4+" TEXT,"+COL_5+" INTEGER,"+COL_6+" INTEGER,"+COL_7+" INTEGER,"+COL_8+" TEXT)");
     }
 
@@ -64,6 +68,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         contentValues.put(COL_6,dateMonth);
         contentValues.put(COL_7,dateDay);
         contentValues.put(COL_8,place);
+        contentValues.put(COL_9,dateYear+"-"+((dateMonth<10) ? "0" : "") + dateMonth + "-" + ((dateDay<10) ? "0" : "") + dateDay);
         long result = db.insert(TABLE_NAME,null,contentValues);
 
         return !(result==-1);
@@ -80,31 +85,52 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         contentValues.put(COL_6,dateMonth);
         contentValues.put(COL_7,dateDay);
         contentValues.put(COL_8,place);
+        contentValues.put(COL_9,dateYear+"-"+((dateMonth<10) ? "0" : "") + dateMonth + "-" + ((dateDay<10) ? "0" : "") + dateDay);
         long result = db.update(TABLE_NAME, contentValues, "ID = ?", new String[] {Integer.toString(id)});
         return !(result==-1);
     }
 
     public Cursor getAllData(){
-        SQLiteDatabase db = this.getWritableDatabase();
-        Cursor res = db.rawQuery("select * from "+TABLE_NAME,null);
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor res = db.rawQuery("SELECT * FROM "+TABLE_NAME,null);
         return res;
     }
-    //TODO Funktion schreiben
-    //TODO auf datums-type wechseln?
-    public Cursor getQueryData(ArrayList<String> cats, DateTime from, DateTime to){
-        int frY = from.getYear();
-        int frM = from.getMonthOfYear();
-        int frD = from.getDayOfMonth();
-        int toY = to.getYear();
-        int toM = to.getMonthOfYear();
-        int toD = to.getDayOfMonth();
-        //1. Fall: zwischen Jahren
-        //2. Fall: in frY, M gr. als frM, analog für toY, toM
-        //3. Fall: in frY, frM, D gr. gl. frD, analog für toY, toM
-        String selectionDate = COL_5 + " BETWEEN " + frY + " AND " + toY + " AND " ;
+
+    public void insertDateColumn(){
         SQLiteDatabase db = this.getWritableDatabase();
-        Cursor res = db.rawQuery("select * from "+TABLE_NAME+" ",null);
-        return res;
+        db.execSQL("ALTER TABLE " + TABLE_NAME + " ADD COLUMN DATESTR TEXT");
+        db.execSQL("UPDATE " + TABLE_NAME + " SET DATESTR = date(YEAR||'-'||(CASE WHEN MONTH LIKE '_' THEN ('0'||MONTH) ELSE MONTH END)||'-'||(CASE WHEN DAY LIKE '_' THEN ('0'||DAY) ELSE DAY END))");
+    }
+
+    public Cursor getQueryData(String cat, DateTime from, DateTime to){
+        String fr_str = from.getYear()+"-"+((from.getMonthOfYear()<10) ? "0" : "") + from.getMonthOfYear() + "-" + ((from.getDayOfMonth()<10) ? "0" : "") + from.getDayOfMonth();
+        String to_str = to.getYear()+"-"+((to.getMonthOfYear()<10) ? "0" : "") + to.getMonthOfYear() + "-" + ((to.getDayOfMonth()<10) ? "0" : "") + to.getDayOfMonth();
+        String selectionDate = COL_9+" BETWEEN '"+fr_str+"' AND '"+to_str+"'";
+        //Log.wtf("QUERY",fr_str);
+        //Log.wtf("QUERY",to_str);
+        //Log.wtf("QUERY", selectionDate);
+        Log.wtf("",cat);
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.rawQuery("SELECT * FROM "+TABLE_NAME+" WHERE " + selectionDate + " AND " + COL_2 + " IN (" + cat + ") ORDER BY "+COL_9+" DESC",null);
+    }
+
+    public Cursor getNewest100(){
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.rawQuery( "SELECT * FROM "+ TABLE_NAME + " ORDER BY " + COL_9 + " DESC LIMIT 100",null);
+    }
+
+    public Cursor getSummary(){
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.rawQuery( "SELECT "+COL_2+", SUM("+ COL_1 +") FROM "+ TABLE_NAME + " GROUP BY " + COL_2,null);
+    }
+
+    public Cursor getSummaryOfQuery(String cat, DateTime from, DateTime to){
+        String fr_str = from.getYear()+"-"+((from.getMonthOfYear()<10) ? "0" : "") + from.getMonthOfYear() + "-" + ((from.getDayOfMonth()<10) ? "0" : "") + from.getDayOfMonth();
+        String to_str = to.getYear()+"-"+((to.getMonthOfYear()<10) ? "0" : "") + to.getMonthOfYear() + "-" + ((to.getDayOfMonth()<10) ? "0" : "") + to.getDayOfMonth();
+        String selectionDate = COL_9+" BETWEEN '"+fr_str+"' AND '"+to_str+"'";
+        Log.wtf("",cat);
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.rawQuery("SELECT "+COL_2+ ", SUM("+ COL_1 +") FROM "+TABLE_NAME+" WHERE "+selectionDate+" AND "+COL_2+" IN ("+cat+") GROUP BY "+COL_2,null);
     }
 
     public Cursor searchForUpdateEntry(int id){

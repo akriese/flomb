@@ -21,6 +21,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -42,6 +43,7 @@ import android.widget.Toast;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Days;
+import org.joda.time.Duration;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -50,6 +52,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
@@ -66,135 +70,37 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     public EditText edt_place, edt_description, edt_amount, edt_editRow;
     public TextView txv_headline, txv_addsumup, txv_sumup11, txv_statssetsumup, txv_statsdisplay;
     public RadioButton rbn_f, rbn_l, rbn_o, rbn_m, rbn_b, rbn_single, rbn_compare, rbn_change;
-    public CheckBox cbx_keepdata, cbx_minus, cbx_f, cbx_a, cbx_t, cbx_o, cbx_b;
-    public LinearLayout lnl_description, lnl_dateplace, lnl_cbxfateb, lnl_editRow;
+    public CheckBox cbx_keepdata, cbx_minus, cbx_f, cbx_l, cbx_m, cbx_o, cbx_b;
+    public LinearLayout lnl_description, lnl_dateplace, lnl_cbxfateb, lnl_editRow, lnl_date1, lnl_date2;
     public RelativeLayout rll_add, rll_start, rll_statssets, rll_settings, rll_stats;
     public ScrollView scv_sumup1;
     public Spinner spi_description;
-    public SeekBar sbr_date1from, sbr_date1to, sbr_date2from, sbr_date2to;
+    public Button btn_date1from, btn_date1to, btn_date2from, btn_date2to;
 
     //endregion
     //region other Elements and variables
     private int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE=0;
     private Calendar calendar;
-    private int nowYear, nowMonth, nowDay, amount=0, dateYear, dateMonth, dateDay, id;
-    private int overall_all, overall_withoutBig;
+    private int nowYear, nowMonth, nowDay, amount=0, dateYear, dateMonth, dateDay, id, datePickerMode;
+    private int overall_all, overall_withoutBig, date_diff1, date_diff2;
     private int overall_f2=0,overall_a2=0,overall_t2=0,overall_o2=0,overall_b2=0, overall_all2;
     private int[][] summed_subs;
     private int[] summed_cat;
     private boolean update_dialog=false;
     private String description="Beschreibung", category, subcategory, place;
-    private DatePicker datepicker;
     private String dateAdd, dateString, date1fromString, date1toString, date2fromString, date2toString;
     private ArrayList<String> categories, categories_short, food_subcategories, living_subcategories,
             other_subcategories, move_subcategories, big_subcategories;
 
     private ArrayList<ArrayList<String>> sub_categories;
-    private int daysInbetween, date1from, date1to, date2from, date2to, newestDayValue;
+    private int daysInbetween, newestDayValue;
+    private DateTime d1f, d1t, d2f, d2t;
     public ArrayList<ArrayAdapter<CharSequence>> adapter_array;
     public ArrayList<RadioButton> rbn_list;
+    public ArrayList<CheckBox> cbx_list;
     DatabaseHelper myDB;
     DatabaseHelperBackup myDBBackup;
 
-    //endregion
-    //region seekbars
-    //region date1from activated
-    private SeekBar.OnSeekBarChangeListener sbr_date1from_listener =
-            new SeekBar.OnSeekBarChangeListener() {
-                @Override
-                public void onProgressChanged(SeekBar sbr_date1from, int progress, boolean fromUser) {
-                    date1from=progress+1;
-                    calculateDates();
-                    sbr_date1to.setMax(newestDayValue-progress);
-                }
-
-                @Override
-                public void onStartTrackingTouch(SeekBar sbr_date1from) {
-                }
-
-                @Override
-                public void onStopTrackingTouch(SeekBar sbr_date1from) {
-                }
-            };
-
-    private SeekBar.OnSeekBarChangeListener sbr_date1to_listener =
-            new SeekBar.OnSeekBarChangeListener() {
-                @Override
-                public void onProgressChanged(SeekBar sbr_date1to, int progress, boolean fromUser) {
-                    date1to=progress+date1from;
-                    calculateDates();
-                }
-
-                @Override
-                public void onStartTrackingTouch(SeekBar sbr_date1to) {
-                }
-
-                @Override
-                public void onStopTrackingTouch(SeekBar sbr_date1to) {
-                }
-            };
-
-    private SeekBar.OnSeekBarChangeListener sbr_date2from_listener =
-            new SeekBar.OnSeekBarChangeListener() {
-                @Override
-                public void onProgressChanged(SeekBar sbr_date2from, int progress, boolean fromUser) {
-                    date2from=progress+1;
-                    calculateDates();
-                    sbr_date2to.setMax(newestDayValue-progress);
-                }
-
-                @Override
-                public void onStartTrackingTouch(SeekBar sbr_date2from) {
-                }
-
-                @Override
-                public void onStopTrackingTouch(SeekBar sbr_date2from) {
-                }
-            };
-
-    private SeekBar.OnSeekBarChangeListener sbr_date2to_listener =
-            new SeekBar.OnSeekBarChangeListener() {
-                @Override
-                public void onProgressChanged(SeekBar sbr_date2to, int progress, boolean fromUser) {
-                    date2to=progress+date2from;
-                    calculateDates();
-                }
-
-                @Override
-                public void onStartTrackingTouch(SeekBar sbr_date2to) {
-                }
-
-                @Override
-                public void onStopTrackingTouch(SeekBar sbr_date2to) {
-                }
-            };
-
-    public void calculateDates(){
-        DateTimeZone UTC = DateTimeZone.forID("UTC");
-        DateTime travelStart= new DateTime(2017,7,5,12,0,0,UTC);
-
-        DateTime date1fromdt = travelStart.plusDays(date1from).plusHours(1);
-        DateTime date1todt = travelStart.plusDays(date1to).plusHours(2);
-        DateTime date2fromdt = travelStart.plusDays(date2from).plusHours(1);
-        DateTime date2todt = travelStart.plusDays(date2to).plusHours(2);
-        date1fromString=date1fromdt.getDayOfMonth()+"."+date1fromdt.getMonthOfYear()+"."+date1fromdt.getYear();
-        date1toString=date1todt.getDayOfMonth()+"."+date1todt.getMonthOfYear()+"."+date1todt.getYear();
-        date2fromString=date2fromdt.getDayOfMonth()+"."+date2fromdt.getMonthOfYear()+"."+date2fromdt.getYear();
-        date2toString=date2todt.getDayOfMonth()+"."+date2todt.getMonthOfYear()+"."+date2todt.getYear();
-        if (rbn_single.isChecked()){
-            txv_statssetsumup.setText(getString(R.string.dates_of) + date1fromString +
-                    getString(R.string.until) + date1toString + getString(R.string.summarized));
-        }
-        else if (rbn_compare.isChecked()){
-            txv_statssetsumup.setText(getString(R.string.dates_of) + date1fromString + " - "+
-                    date1toString + getString(R.string.and) + date2fromString + " - " + date2toString + getString(R.string.compared));
-        }
-        else if (rbn_change.isChecked()){
-            txv_statssetsumup.setText(getString(R.string.change_from) + date1fromString +
-                    getString(R.string.until) + date1toString + getString(R.string.showed));
-        }
-    }
-    //endregion
     //endregion
 
     @Override
@@ -236,17 +142,17 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         rll_statssets = findViewById(R.id.rll_statssets);
         lnl_cbxfateb = findViewById(R.id.lnl_cbxfateb);
         cbx_f = findViewById(R.id.cbx_f);
-        cbx_a = findViewById(R.id.cbx_a);
-        cbx_t = findViewById(R.id.cbx_t);
+        cbx_l = findViewById(R.id.cbx_l);
+        cbx_m = findViewById(R.id.cbx_m);
         cbx_o = findViewById(R.id.cbx_o);
         cbx_b = findViewById(R.id.cbx_b);
         rbn_single = findViewById(R.id.rbn_single);
         rbn_compare = findViewById(R.id.rbn_compare);
         rbn_change = findViewById(R.id.rbn_change);
-        sbr_date1from = findViewById(R.id.sbr_date1from);
-        sbr_date1to = findViewById(R.id.sbr_date1to);
-        sbr_date2from = findViewById(R.id.sbr_date2from);
-        sbr_date2to = findViewById(R.id.sbr_date2to);
+        btn_date1from = findViewById(R.id.btn_date1from);
+        btn_date1to = findViewById(R.id.btn_date1to);
+        btn_date2from = findViewById(R.id.btn_date2from);
+        btn_date2to = findViewById(R.id.btn_date2to);
         txv_statssetsumup = findViewById(R.id.txv_statssetsumup);
         //endregion
         //region settings
@@ -258,6 +164,8 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         //endregion
         //region stats
         rll_stats = findViewById(R.id.rll_stats);
+        lnl_date1 = findViewById(R.id.lnl_date1);
+        lnl_date2 = findViewById(R.id.lnl_date2);
         txv_statsdisplay = findViewById(R.id.txv_statsdisplay);
         //endregion
         //endregion
@@ -324,10 +232,20 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         rbn_list.add(rbn_m);
         rbn_list.add(rbn_b);
 
+        cbx_list = new ArrayList<>();
+        cbx_list.add(cbx_f);
+        cbx_list.add(cbx_l);
+        cbx_list.add(cbx_o);
+        cbx_list.add(cbx_m);
+        cbx_list.add(cbx_b);
+
         spi_description.setAdapter(adapter_array.get(0));
         spi_description.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                SharedPreferences.Editor e = getSharedPreferences("USER_PREFERENCES_ADD", MODE_PRIVATE).edit();
+                e.putInt("SUB", position);
+                e.apply();
                 subcategory = parent.getItemAtPosition(position).toString();
             }
 
@@ -337,12 +255,48 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
             }
         });
 
+        //region datepicker listeners
+        datePickerMode = 0;
         btn_datepicker.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
+                datePickerMode = 0;
                 showDatePickerDialog();
             }
         });
+
+        btn_date1from.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                datePickerMode = 1;
+                showDatePickerDialog();
+            }
+        });
+
+        btn_date1to.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                datePickerMode = 2;
+                showDatePickerDialog();
+            }
+        });
+
+        btn_date2from.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                datePickerMode = 3;
+                showDatePickerDialog();
+            }
+        });
+
+        btn_date2to.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                datePickerMode = 4;
+                showDatePickerDialog();
+            }
+        });
+        //endregion
 
         updateFrontPage();
         PACKAGE_NAME = getApplicationContext().getPackageName();
@@ -441,8 +395,8 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         rbn_list.get(checked_rbn).setChecked(true);
         spi_description.setAdapter(adapter_array.get(checked_rbn));
         category = categories.get(checked_rbn);
-        //TODO save subcategory and display correctly
-        subcategory = sub_categories.get(checked_rbn).get(0);
+        spi_description.setSelection(prefGetter.getInt("SUB", 0));
+        subcategory = sub_categories.get(checked_rbn).get(prefGetter.getInt("SUB", 0));
         edt_place.setText(prefGetter.getString("PLACE",""));
         if (edt_place.getText().toString().equals("")) cbx_keepdata.setChecked(true);
         dateYear = prefGetter.getInt("YEAR", Calendar.getInstance().get(Calendar.YEAR));
@@ -455,14 +409,16 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         rll_statssets.setVisibility(View.VISIBLE);
         btn_back.setVisibility(View.VISIBLE);
         txv_headline.setText(R.string.statistics);
+        rbn_single.setChecked(true);
+        lnl_date2.setVisibility(View.INVISIBLE);
+        btn_date1from.setText(R.string.date1from);
+        btn_date1to.setText(R.string.date1to);
+        btn_date2from.setText(R.string.date2from);
+        btn_date2to.setText(R.string.date2to);
 
-        sbr_date1from.setOnSeekBarChangeListener(sbr_date1from_listener);
-        sbr_date1to.setOnSeekBarChangeListener(sbr_date1to_listener);
-        sbr_date2from.setOnSeekBarChangeListener(sbr_date2from_listener);
-        sbr_date2to.setOnSeekBarChangeListener(sbr_date2to_listener);
         Cursor res = myDB.getAllData();
         DateTimeZone UTC = DateTimeZone.forID("UTC");
-        DateTime travelStart= new DateTime(2017,7,5,12,0,0,UTC);
+        DateTime travelStart = new DateTime(2017,7,5,12,0,0,UTC);
         while (res.moveToNext()) {
             DateTime addDatedt = new DateTime(res.getInt(5), res.getInt(6), res.getInt(7), 13, 0, 0, UTC);
             daysInbetween = Days.daysBetween(travelStart.toLocalDateTime(), addDatedt.toLocalDateTime()).getDays();
@@ -471,16 +427,9 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
             }
         }
 
-        sbr_date1from.setMax(newestDayValue);
-        sbr_date1to.setMax(newestDayValue);
-        sbr_date2from.setMax(newestDayValue);
-        sbr_date2to.setMax(newestDayValue);
-        sbr_date1from.setProgress(0);
-        sbr_date1to.setProgress(0);
-        sbr_date2from.setProgress(0);
-        sbr_date2to.setProgress(0);
-        txv_statssetsumup.setText(getString(R.string.dates_of) + date1fromString +
-                getString(R.string.until) + date1toString + getString(R.string.summarized));
+        setDefaultDatesOnPickers();
+
+        txv_statssetsumup.setText(getString(R.string.dates_of) + d_to_s(d1f) + getString(R.string.until) + d_to_s(d1t) + getString(R.string.summarized) + " ("+date_diff1+" Tage)");
     }
 
     public void onSettingsClick(View view) {
@@ -563,6 +512,25 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         output.flush();
         output.close();
         fis.close();
+    }
+
+    public void setDefaultDatesOnPickers(){
+        SharedPreferences p = getSharedPreferences("USER_PREFERENCES_STATS", MODE_PRIVATE);
+        Calendar c = Calendar.getInstance();
+        d1f = new DateTime(p.getInt("Y1F", c.get(Calendar.YEAR)), p.getInt("M1F", c.get(Calendar.MONTH)+1), p.getInt("D1F", c.get(Calendar.DAY_OF_MONTH)),13,0,0);
+        d1t = new DateTime(p.getInt("Y1T", c.get(Calendar.YEAR)), p.getInt("M1T", c.get(Calendar.MONTH)+1), p.getInt("D1T", c.get(Calendar.DAY_OF_MONTH)+1),13,0,0);
+        d2f = new DateTime(p.getInt("Y2F", c.get(Calendar.YEAR)), p.getInt("M2F", c.get(Calendar.MONTH)+1), p.getInt("D2F", c.get(Calendar.DAY_OF_MONTH)),13,0,0);
+        d2t = new DateTime(p.getInt("Y2T", c.get(Calendar.YEAR)), p.getInt("M2T", c.get(Calendar.MONTH)+1), p.getInt("D2T", c.get(Calendar.DAY_OF_MONTH)+1),13,0,0);
+        btn_date1from.setText(getString(R.string.from) + d_to_s(d1f));
+        btn_date1to.setText(getString(R.string.to) + d_to_s(d1t));
+        btn_date2from.setText(getString(R.string.from) + d_to_s(d2f));
+        btn_date2to.setText(getString(R.string.to) + d_to_s(d2t));
+        calcDateDiff(d1f,d1t,1);
+        calcDateDiff(d2f,d2t,2);
+    }
+
+    public String d_to_s(DateTime a) {
+        return ((a.getDayOfMonth()<10) ? "0" : "")+a.getDayOfMonth()+"."+((a.getMonthOfYear()<10) ? "0" : "")+a.getMonthOfYear()+"." + a.getYear();
     }
 
     public void addData(View view){
@@ -724,27 +692,70 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
     //region Datepicker
     public void showDatePickerDialog(){
-        DatePickerDialog datePickerDialog = new DatePickerDialog(this,this, dateYear, dateMonth-1, dateDay);
+        int loc_y = dateYear;
+        int loc_m = dateMonth;
+        int loc_d = dateDay;
+        switch(datePickerMode){
+            case 0: break;
+            case 1: loc_y = d1f.getYear(); loc_m = d1f.getMonthOfYear(); loc_d = d1f.getDayOfMonth(); break;
+            case 2:
+                if (d1t.isAfter(d1f)) {loc_y = d1t.getYear(); loc_m = d1t.getMonthOfYear(); loc_d = d1t.getDayOfMonth();}
+                else {loc_y = d1f.getYear(); loc_m = d1f.getMonthOfYear(); loc_d = d1f.getDayOfMonth()+1;}
+                break;
+            case 3: loc_y = d2f.getYear(); loc_m = d2f.getMonthOfYear(); loc_d = d2f.getDayOfMonth(); break;
+            case 4:
+                if (d1t.isAfter(d1f)) {loc_y = d2t.getYear(); loc_m = d2t.getMonthOfYear(); loc_d = d2t.getDayOfMonth();}
+                else {loc_y = d2f.getYear(); loc_m = d2f.getMonthOfYear(); loc_d = d2f.getDayOfMonth()+1;}
+                break;
+            default:
+        }
+        DatePickerDialog datePickerDialog = new DatePickerDialog(this,this, loc_y, loc_m-1, loc_d);
         Toast.makeText(getApplicationContext(), getString(R.string.choose_date), Toast.LENGTH_SHORT).show();
         datePickerDialog.show();
     }
 
     @Override
     public void onDateSet(DatePicker arg0, int arg1, int arg2, int arg3) {
-        // arg1 = year
-        // arg2 = month
-        // arg3 = day
-        showDate(arg1, arg2+1, arg3);
-        //Ort wird fokussiert
-        edt_place.requestFocus();
-        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.showSoftInput(edt_place,InputMethodManager.SHOW_IMPLICIT);
-        edt_place.setSelection(edt_place.getText().length());
-        updateInformation();
+        // arg1 = year, arg2 = month, arg3 = day
+        if (datePickerMode == 0) {
+            showDateAddMode(arg1, arg2 + 1, arg3);
+            //Ort wird fokussiert
+            edt_place.requestFocus();
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.showSoftInput(edt_place, InputMethodManager.SHOW_IMPLICIT);
+            edt_place.setSelection(edt_place.getText().length());
+            updateInformation();
+        }
+        else {
+            SharedPreferences.Editor e = getSharedPreferences("USER_PREFERENCES_STATS", MODE_PRIVATE).edit();
+            switch (datePickerMode){
+                case 1: d1f = new DateTime(arg1, arg2+1, arg3, 13, 0,0);
+                    btn_date1from.setText(getString(R.string.from) + d_to_s(d1f));
+                    calcDateDiff(d1f, d1t, 1);
+                    e.putInt("Y1F", d1f.getYear()); e.putInt("M1F", d1f.getMonthOfYear());
+                    e.putInt("D1F", d1f.getDayOfMonth()); break;
+                case 2: d1t = new DateTime(arg1, arg2+1, arg3, 13, 0,0);
+                    btn_date1to.setText(getString(R.string.to) + d_to_s(d1t));
+                    calcDateDiff(d1f, d1t, 1);
+                    e.putInt("Y1T", d1t.getYear()); e.putInt("M1T", d1t.getMonthOfYear());
+                    e.putInt("D1T", d1t.getDayOfMonth()); break;
+                case 3: d2f = new DateTime(arg1, arg2+1, arg3, 13, 0,0);
+                    btn_date2from.setText(getString(R.string.from) + d_to_s(d2f));
+                    calcDateDiff(d2f, d2t, 2);
+                    e.putInt("Y2F", d2f.getYear()); e.putInt("M2F", d2f.getMonthOfYear());
+                    e.putInt("D2F", d2f.getDayOfMonth()); break;
+                case 4: d2t = new DateTime(arg1, arg2+1, arg3, 13, 0,0);
+                    btn_date2to.setText(getString(R.string.to) + d_to_s(d2t));
+                    calcDateDiff(d2f, d2t, 2);
+                    e.putInt("Y2T", d1f.getYear()); e.putInt("M2T", d2t.getMonthOfYear());
+                    e.putInt("D2T", d2t.getDayOfMonth()); break;
+            }
+            e.apply();
+        }
     }
 
     //set Button text and sets variables for adding
-    private void showDate(int year, int month, int day) {
+    private void showDateAddMode(int year, int month, int day) {
         btn_datepicker.setText(new StringBuilder().append(day).append(".")
                 .append(month).append(".").append(year));
         DateTimeZone UTC = DateTimeZone.forID("UTC");
@@ -756,6 +767,14 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         dateYear = year;
         dateMonth = month;
         dateDay = day;
+    }
+
+    public void calcDateDiff(DateTime a, DateTime b, int number){
+        if (a.isAfter(b)) return;
+        Duration dur = new Duration(a,b);
+        int diff = (int) dur.getStandardDays()+1;
+        if (number==1) date_diff1 = diff;
+        else date_diff2 = diff;
     }
     //endregion
 
@@ -780,9 +799,9 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         SharedPreferences.Editor editor = placeAndDate.edit();
         if (cbx_keepdata.isChecked()){
             editor.putString("PLACE",edt_place.getText().toString());
-            //eingegebenes Datum
             editor.putInt("RBN", getIndexOfCheckedRbn(rbn_list));
-            //TODO subcat
+            editor.putInt("SUB", spi_description.getSelectedItemPosition());
+            //eingegebenes Datum
             editor.putInt("YEAR",dateYear);
             editor.putInt("MONTH",dateMonth);
             editor.putInt("DAY",dateDay);
@@ -790,6 +809,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         else {
             editor.putString("PLACE","");
             editor.putInt("RBN",0);
+            editor.putInt("SUB",0);
             //heutiges Datum
             editor.putInt("YEAR",nowYear);
             editor.putInt("MONTH",nowMonth);
@@ -813,27 +833,24 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
     public void onRbnStatsClick(View view) {
         if (rbn_single.isChecked()){
-            sbr_date2from.setVisibility(View.INVISIBLE);
-            sbr_date2to.setVisibility(View.INVISIBLE);
+            lnl_date2.setVisibility(View.INVISIBLE);
             txv_statssetsumup.setText(getString(R.string.dates_of) + date1fromString +
                     getString(R.string.until) + date1toString + getString(R.string.summarized));
         }
         else if (rbn_compare.isChecked()){
-            sbr_date2from.setVisibility(View.VISIBLE);
-            sbr_date2to.setVisibility(View.VISIBLE);
+            lnl_date2.setVisibility(View.VISIBLE);
             txv_statssetsumup.setText(getString(R.string.dates_of) + date1fromString + " - "+
                     date1toString + getString(R.string.and) + date2fromString + " - " + date2toString + getString(R.string.compared));
         }
         else if (rbn_change.isChecked()){
-            sbr_date2from.setVisibility(View.INVISIBLE);
-            sbr_date2to.setVisibility(View.INVISIBLE);
+            lnl_date2.setVisibility(View.INVISIBLE);
             txv_statssetsumup.setText(getString(R.string.change_from) + date1fromString +
                     getString(R.string.until) + date1toString + getString(R.string.showed));
         }
     }
 
     public void showStats(View view) {
-        if (!cbx_f.isChecked()&&!cbx_a.isChecked()&&!cbx_t.isChecked()&&!cbx_o.isChecked()&&!cbx_b.isChecked()){
+        if (!cbx_f.isChecked()&&!cbx_l.isChecked()&&!cbx_m.isChecked()&&!cbx_o.isChecked()&&!cbx_b.isChecked()){
             //nothing
             Toast.makeText(MainActivity.this, R.string.choose_category, Toast.LENGTH_LONG).show();
         }
@@ -845,201 +862,53 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     }
 
     public void analyzeData(){
-        for (int i = 0; i < summed_cat.length; i++)
-            summed_cat[i] = 0;
-        overall_all=0;
-        overall_f2=0;overall_a2=0;overall_t2=0;overall_o2=0;overall_b2=0;overall_all2=0;
-        //TODO hier memberfunction myDB.getQueryData(args) verwenden
-        Cursor res = myDB.getAllData();
+        String chosen_cats = "";
+        for (int i = 0; i < cbx_list.size(); i++) {
+            if (cbx_list.get(i).isChecked()) {
+                if (!chosen_cats.equals("")) chosen_cats+=",";
+                chosen_cats += "'"+categories.get(i)+"'";
+            }
+        }
         StringBuilder builderDetails = new StringBuilder();
-        StringBuilder builderDetails2 = new StringBuilder();
         StringBuilder builderStats = new StringBuilder();
-        DateTimeZone UTC = DateTimeZone.forID("UTC");
-        DateTime travelStart= new DateTime(2017,7,5,12,0,0,UTC);
-        //TODO reduzieren!
-        //TODO SQL Query mit allen Selections (schneller und schöner)
-        /*
-        if (rbn_single.isChecked()){
-            while (res.moveToNext()) {
-                DateTime checkDatedt = new DateTime(res.getInt(5), res.getInt(6), res.getInt(7), 13, 0, 0, UTC);
-                daysInbetween = Days.daysBetween(travelStart.toLocalDateTime(), checkDatedt.toLocalDateTime()).getDays();
-                if ((daysInbetween >= date1from) && (daysInbetween <= date1to)) {
-                    String dataCategory = res.getString(res.getColumnIndex("CATEGORY"));
-                    switch (dataCategory) {
-                        case "Food":
-                            if (cbx_f.isChecked()){
-                                overall_f += res.getInt(1);
-                                overall_all += res.getInt(1);
-                                builderDetails.insert(0,res.getInt(1) + " für " + res.getString(4) + " (" + res.getString(2) + ", " + res.getString(3) + ") am "
-                                        + res.getInt(7) + "." + res.getInt(6) + ". (" + daysInbetween + ", " + res.getInt(0) + ") in " + res.getString(8) + "\n");
-                            }break;
-                        case "Living":
-                            if (cbx_a.isChecked()){
-                                overall_a += res.getInt(1);
-                                overall_all += res.getInt(1);
-                                builderDetails.insert(0,res.getInt(1) + " für " + res.getString(4) + " (" + res.getString(2) + ", " + res.getString(3) + ") am "
-                                        + res.getInt(7) + "." + res.getInt(6) + ". (" + daysInbetween + ", " + res.getInt(0) + ") in " + res.getString(8) + "\n");
-                            }break;
-                        case "Move":
-                            if (cbx_t.isChecked()){
-                                overall_t += res.getInt(1);
-                                overall_all += res.getInt(1);
-                                builderDetails.insert(0,res.getInt(1) + " für " + res.getString(4) + " (" + res.getString(2) + ", " + res.getString(3) + ") am "
-                                        + res.getInt(7) + "." + res.getInt(6) + ". (" + daysInbetween + ", " + res.getInt(0) + ") in " + res.getString(8) + "\n");
-                            }break;
-                        case "Other":
-                            if (cbx_o.isChecked()){
-                                overall_o += res.getInt(1);
-                                overall_all += res.getInt(1);
-                                builderDetails.insert(0,res.getInt(1) + " für " + res.getString(4) + " (" + res.getString(2) + ", " + res.getString(3) + ") am "
-                                        + res.getInt(7) + "." + res.getInt(6) + ". (" + daysInbetween + ", " + res.getInt(0) + ") in " + res.getString(8) + "\n");
-                            }break;
-                        case "Big":
-                            if (cbx_b.isChecked()){
-                                overall_b += res.getInt(1);
-                                overall_all += res.getInt(1);
-                                builderDetails.insert(0,res.getInt(1) + " für " + res.getString(4) + " (" + res.getString(2) + ", " + res.getString(3) + ") am "
-                                        + res.getInt(7) + "." + res.getInt(6) + ". (" + daysInbetween + ", " + res.getInt(0) + ") in " + res.getString(8) + "\n");
-                            }break;
-
-                        default:
-                            overall_b += res.getInt(1);
-                            break;
-                    }
-                }
-            }
-            int zeitspanne = date1to-date1from+1;
-            if (overall_all==0){overall_all=1;}
-            builderStats.append("Modus: Einzel\n");
-            //TODO in Schleife
-            builderStats.append("Zeitraum: "+date1fromString+" bis "+date1toString+" ("+zeitspanne+" Tage)\n");
-            if (cbx_f.isChecked()){builderStats.append("\nFood: "+overall_f+" Cent ("+overall_f/zeitspanne+" pro Tag, "+ overall_f*100/overall_all+" Prozent)\n");}
-            if (cbx_a.isChecked()){builderStats.append("Living: "+overall_a+" Cent ("+overall_a/zeitspanne+" pro Tag, "+overall_a*100/overall_all+" Prozent)\n");}
-            if (cbx_t.isChecked()){builderStats.append("Move: "+overall_t+" Cent ("+overall_t/zeitspanne+" pro Tag, "+overall_t*100/overall_all+" Prozent)\n");}
-            if (cbx_o.isChecked()){builderStats.append("Other: "+overall_o+" Cent ("+overall_o/zeitspanne+" pro Tag, "+overall_o*100/overall_all+" Prozent)\n");}
-            if (cbx_b.isChecked()){builderStats.append("Big: "+overall_b+" Cent ("+overall_b/zeitspanne+" pro Tag, "+overall_b*100/overall_all+" Prozent)\n\n");}
-            builderStats.append("Auswahl addiert: "+overall_all+" Cent ("+overall_all/zeitspanne+" pro Tag)\n");
-            builderStats.append("");
+        StringBuilder builderStats2 = new StringBuilder();
+        ArrayList<ArrayList<String>> content = new ArrayList<>();
+        //TODO cbx_sorting
+        Cursor r = myDB.getQueryData(chosen_cats, d1f, d1t);
+        while (r.moveToNext()) {
+            ArrayList<String> entry = new ArrayList<>(
+                    Arrays.asList(r.getString(0), r.getString(1), r.getString(2),
+                    r.getString(3), r.getString(4), r.getString(8), r.getString(9))
+            );
+            content.add(entry);
         }
-        if (rbn_compare.isChecked()){
-            while (res.moveToNext()) {
-                DateTime checkDatedt = new DateTime(res.getInt(5), res.getInt(6), res.getInt(7), 13, 0, 0, UTC);
-                daysInbetween = Days.daysBetween(travelStart.toLocalDateTime(), checkDatedt.toLocalDateTime()).getDays();
-                if ((daysInbetween >= date1from) && (daysInbetween <= date1to)) {
-                    String dataCategory = res.getString(res.getColumnIndex("CATEGORY"));
-                    switch (dataCategory) {
-                        case "Food":
-                            if (cbx_f.isChecked()){
-                                overall_f += res.getInt(1);
-                                overall_all += res.getInt(1);
-                                builderDetails.insert(0,res.getInt(1) + " für " + res.getString(4) + " (" + res.getString(2) + ", " + res.getString(3) + ") am "
-                                        + res.getInt(7) + "." + res.getInt(6) + ". (" + daysInbetween + ", " + res.getInt(0) + ") in " + res.getString(8) + "\n");
-                            }break;
-                        case "Living":
-                            if (cbx_a.isChecked()){
-                                overall_a += res.getInt(1);
-                                overall_all += res.getInt(1);
-                                builderDetails.insert(0,res.getInt(1) + " für " + res.getString(4) + " (" + res.getString(2) + ", " + res.getString(3) + ") am "
-                                        + res.getInt(7) + "." + res.getInt(6) + ". (" + daysInbetween + ", " + res.getInt(0) + ") in " + res.getString(8) + "\n");
-                            }break;
-                        case "Move":
-                            if (cbx_t.isChecked()){
-                                overall_t += res.getInt(1);
-                                overall_all += res.getInt(1);
-                                builderDetails.insert(0,res.getInt(1) + " für " + res.getString(4) + " (" + res.getString(2) + ", " + res.getString(3) + ") am "
-                                        + res.getInt(7) + "." + res.getInt(6) + ". (" + daysInbetween + ", " + res.getInt(0) + ") in " + res.getString(8) + "\n");
-                            }break;
-                        case "Other":
-                            if (cbx_o.isChecked()){
-                                overall_o += res.getInt(1);
-                                overall_all += res.getInt(1);
-                                builderDetails.insert(0,res.getInt(1) + " für " + res.getString(4) + " (" + res.getString(2) + ", " + res.getString(3) + ") am "
-                                        + res.getInt(7) + "." + res.getInt(6) + ". (" + daysInbetween + ", " + res.getInt(0) + ") in " + res.getString(8) + "\n");
-                            }break;
-                        case "Big":
-                            if (cbx_b.isChecked()){
-                                overall_b += res.getInt(1);
-                                overall_all += res.getInt(1);
-                                builderDetails.insert(0,res.getInt(1) + " für " + res.getString(4) + " (" + res.getString(2) + ", " + res.getString(3) + ") am "
-                                        + res.getInt(7) + "." + res.getInt(6) + ". (" + daysInbetween + ", " + res.getInt(0) + ") in " + res.getString(8) + "\n");
-                            }break;
 
-                        default:
-                            overall_b += res.getInt(1);
-                            break;
-                    }
-                }
-                if ((daysInbetween >= date2from) && (daysInbetween <= date2to)) {
-                    String dataCategory = res.getString(res.getColumnIndex("CATEGORY"));
-                    switch (dataCategory) {
-                        case "Food":
-                            if (cbx_f.isChecked()){
-                                overall_f2 += res.getInt(1);
-                                overall_all2 += res.getInt(1);
-                                builderDetails2.insert(0,res.getInt(1) + " für " + res.getString(4) + " (" + res.getString(2) + ", " + res.getString(3) + ") am "
-                                        + res.getInt(7) + "." + res.getInt(6) + ". (" + daysInbetween + ", " + res.getInt(0) + ") in " + res.getString(8) + "\n");
-                            }break;
-                        case "Living":
-                            if (cbx_a.isChecked()){
-                                overall_a2 += res.getInt(1);
-                                overall_all2 += res.getInt(1);
-                                builderDetails2.insert(0,res.getInt(1) + " für " + res.getString(4) + " (" + res.getString(2) + ", " + res.getString(3) + ") am "
-                                        + res.getInt(7) + "." + res.getInt(6) + ". (" + daysInbetween + ", " + res.getInt(0) + ") in " + res.getString(8) + "\n");
-                            }break;
-                        case "Move":
-                            if (cbx_t.isChecked()){
-                                overall_t2 += res.getInt(1);
-                                overall_all2 += res.getInt(1);
-                                builderDetails2.insert(0,res.getInt(1) + " für " + res.getString(4) + " (" + res.getString(2) + ", " + res.getString(3) + ") am "
-                                        + res.getInt(7) + "." + res.getInt(6) + ". (" + daysInbetween + ", " + res.getInt(0) + ") in " + res.getString(8) + "\n");
-                            }break;
-                        case "Other":
-                            if (cbx_o.isChecked()){
-                                overall_o2 += res.getInt(1);
-                                overall_all2 += res.getInt(1);
-                                builderDetails2.insert(0,res.getInt(1) + " für " + res.getString(4) + " (" + res.getString(2) + ", " + res.getString(3) + ") am "
-                                        + res.getInt(7) + "." + res.getInt(6) + ". (" + daysInbetween + ", " + res.getInt(0) + ") in " + res.getString(8) + "\n");
-                            }break;
-                        case "Big":
-                            if (cbx_b.isChecked()){
-                                overall_b2 += res.getInt(1);
-                                overall_all2 += res.getInt(1);
-                                builderDetails2.insert(0,res.getInt(1) + " für " + res.getString(4) + " (" + res.getString(2) + ", " + res.getString(3) + ") am "
-                                        + res.getInt(7) + "." + res.getInt(6) + ". (" + daysInbetween + ", " + res.getInt(0) + ") in " + res.getString(8) + "\n");
-                            }break;
+        //sortiert nach daten
+        content.sort(((p1,p2) -> p2.get(6).compareTo(p1.get(6))));
 
-                        default:
-                            overall_b2 += res.getInt(1);
-                            break;
-                    }
-                }
-            }
-            int zeitspanne = date1to-date1from+1;
-            int zeitspanne2 = date2to-date2from+1;
-            if (overall_all==0){overall_all=1;}
-            if (overall_all2==0){overall_all2=1;}
-            builderStats.append("Modus: Vergleich\n");
-            //TODO schleife vllt von oben?
-            builderStats.append("Zeitraum: "+date1fromString+" bis "+date1toString+" ("+zeitspanne+" Tage) und\n"+date2fromString+" bis "+date2toString+" ("+zeitspanne2+" Tage)\n");
-            if (cbx_f.isChecked()){builderStats.append("\nFood: "+overall_f+"---"+overall_f2+" Cent ("+overall_f/zeitspanne+"---"+overall_f2/zeitspanne2+" pro Tag, "+ overall_f*100/overall_all+"/"+overall_f2*100/overall_all2+"%)\n");}
-            if (cbx_a.isChecked()){builderStats.append("Living: "+overall_a+"---"+overall_a2+" Cent ("+overall_a/zeitspanne+"---"+overall_a2/zeitspanne2+" pro Tag, "+overall_a*100/overall_all+"/"+overall_a2*100/overall_all2+"%)\n");}
-            if (cbx_t.isChecked()){builderStats.append("Move: "+overall_t+"---"+overall_t2+" Cent ("+overall_t/zeitspanne+"---"+overall_t2/zeitspanne2+" pro Tag, "+overall_t*100/overall_all+"/"+overall_t2*100/overall_all2+"%)\n");}
-            if (cbx_o.isChecked()){builderStats.append("Other: "+overall_o+"---"+overall_o2+" Cent ("+overall_o/zeitspanne+"---"+overall_o2/zeitspanne2+" pro Tag, "+overall_o*100/overall_all+"/"+overall_o2*100/overall_all2+"%)\n");}
-            if (cbx_b.isChecked()){builderStats.append("Big: "+overall_b+"---"+overall_b2+" Cent ("+overall_b/zeitspanne+"---"+overall_b2/zeitspanne2+" pro Tag, "+overall_b*100/overall_all+"/"+overall_b2*100/overall_all2+"%)\n\n");}
-            builderStats.append("Auswahl addiert: "+overall_all+"---"+overall_all2+" Cent ("+overall_all/zeitspanne+"---"+overall_all2/zeitspanne2+" pro Tag)\n");
-            if (cbx_f.isChecked()){builderStats.append("\nFood: "+(overall_f-overall_f2)+" Cent ("+((overall_f/zeitspanne)-(overall_f2/zeitspanne2))+" pro Tag)\n");}
-            if (cbx_a.isChecked()){builderStats.append("Living: "+(overall_a-overall_a2)+" Cent ("+((overall_a/zeitspanne)-(overall_a2/zeitspanne2))+" pro Tag)\n");}
-            if (cbx_t.isChecked()){builderStats.append("Move: "+(overall_t-overall_t2)+" Cent ("+((overall_t/zeitspanne)-(overall_t2/zeitspanne2))+" pro Tag)\n");}
-            if (cbx_o.isChecked()){builderStats.append("Other: "+(overall_o-overall_o2)+" Cent ("+((overall_o/zeitspanne)-(overall_o2/zeitspanne2))+" pro Tag)\n");}
-            if (cbx_b.isChecked()){builderStats.append("Big: "+(overall_b-overall_b2)+" Cent ("+((overall_b/zeitspanne)-(overall_b2/zeitspanne2))+" pro Tag)\n");}
-            builderStats.append("Auswahl addiert: "+(overall_all-overall_all2)+" Cent ("+((overall_all/zeitspanne)-(overall_all2/zeitspanne2))+" pro Tag)\n");
+        //TODO schön formatieren
+        for (int i = 0; i < content.size(); i++){
+            builderDetails.append(content.get(i).toString()+"\n");
         }
-        */
+
+        builderStats.append(getString(R.string.dates_of) + d_to_s(d1f) + getString(R.string.until) + d_to_s(d1t) + getString(R.string.summarized)+" ("+date_diff1+" Tage)\n\n");
+        r = myDB.getSummaryOfQuery(chosen_cats, d1f, d1t);
+        r.move(-1); // da mit movetonext (Schleife) auf id=0 gegangen wird
+        while (r.moveToNext()){
+            int amt = r.getInt(1);
+            //TODO auf zwei stellen runden
+            //TODO als Euro darstellen
+            builderStats.append(r.getString(0)+": "+amt+"("+ (amt+0.0)/date_diff1 +" pro Tag)\n");
+            Log.wtf("hi",r.getString(0)+": "+r.getString(1));
+        }
+
+        Log.wtf("",""+builderStats.length());
+        //Cursor res2 = myDB.getQueryData(str_arr, d2f, d2t);
+
         StringBuilder builder = new StringBuilder();
         builder.append(builderStats);
         builder.append("\n\n"+builderDetails);
-        if (rbn_compare.isChecked()){builder.append("\n\n"+builderDetails2);}
-        txv_statsdisplay.setText(builder);
+        txv_statsdisplay.setText(builder.toString());
     }
 
     public void onBackupDBClick(View view) {
@@ -1109,8 +978,8 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
     }
 
-    //TODO datepicker statt slider bei statistik
     //TODO kein exit bei drehen des Handys
     //TODO delete last entry function + button
     //TODO suche ermöglichen
+    //TODO raw query ermöglichen
 }

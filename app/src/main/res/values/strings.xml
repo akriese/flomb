@@ -5,6 +5,12 @@
     <string name="entry_updated">Eintrag geupdated!</string>
     <string name="entry_not_updated">Eintrag nicht geupdated!</string>
     <string name="date">Datum</string>
+    <string name="date1from">Von (Datum A)</string>
+    <string name="date1to">Bis (Datum A)</string>
+    <string name="date2from">Von (Datum B)</string>
+    <string name="date2to">Bis (Datum B)</string>
+    <string name="from">Vom&#160;</string>
+    <string name="to">Bis&#160;</string>
     <string name="für">&#160;für&#160;</string>
     <string name="am">&#160;am&#160;</string>
     <string name="in">&#160;in&#160;</string>

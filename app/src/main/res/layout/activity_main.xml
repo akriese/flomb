@@ -235,18 +235,18 @@
             <CheckBox
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/cbx_a"
-                android:text="A"/>
-            <CheckBox
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/cbx_t"
-                android:text="T"/>
+                android:id="@+id/cbx_l"
+                android:text="L"/>
             <CheckBox
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/cbx_o"
                 android:text="O"/>
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/cbx_m"
+                android:text="M"/>
             <CheckBox
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -289,48 +289,54 @@
 
         </RadioGroup>
 
-        <SeekBar
-            android:layout_width="match_parent"
+        <LinearLayout
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/sbr_date1from"
+            android:layout_below="@+id/rgr_stats"
+            android:id="@+id/lnl_date1"
             android:layout_centerHorizontal="true"
-            android:layout_below="@id/rgr_stats"
-            android:progress="0"
-            android:layout_marginTop="20dp"/>
+            android:gravity="center_horizontal"
+            android:layout_marginTop="20dp">
 
-        <SeekBar
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/sbr_date1to"
-            android:layout_centerHorizontal="true"
-            android:layout_below="@id/sbr_date1from"
-            android:progress="0"
-            android:layout_marginTop="20dp"/>
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/btn_date1from"/>
 
-        <SeekBar
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/sbr_date2from"
-            android:layout_centerHorizontal="true"
-            android:layout_below="@id/sbr_date1to"
-            android:progress="0"
-            android:layout_marginTop="20dp"/>
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/btn_date1to"/>
+        </LinearLayout>
 
-        <SeekBar
-            android:layout_width="match_parent"
+        <LinearLayout
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/sbr_date2to"
+            android:id="@+id/lnl_date2"
             android:layout_centerHorizontal="true"
-            android:layout_below="@id/sbr_date2from"
-            android:progress="0"
-            android:layout_marginTop="20dp"/>
+            android:gravity="center_horizontal"
+            android:layout_below="@+id/lnl_date1"
+            android:layout_marginTop="20dp">
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/btn_date2from"/>
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/btn_date2to"/>
+        </LinearLayout>
+
+
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/txv_statssetsumup"
             android:text="Daten von:"
-            android:layout_below="@id/sbr_date2to"
+            android:layout_below="@id/lnl_date2"
             android:layout_marginTop="20dp"
             android:layout_centerHorizontal="true"/>
 
