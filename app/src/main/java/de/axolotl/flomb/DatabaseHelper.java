@@ -102,9 +102,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("UPDATE " + TABLE_NAME + " SET DATESTR = date(YEAR||'-'||(CASE WHEN MONTH LIKE '_' THEN ('0'||MONTH) ELSE MONTH END)||'-'||(CASE WHEN DAY LIKE '_' THEN ('0'||DAY) ELSE DAY END))");
     }
 
-    public Cursor getQueryData(String cat, DateTime from, DateTime to){
-        String fr_str = from.getYear()+"-"+((from.getMonthOfYear()<10) ? "0" : "") + from.getMonthOfYear() + "-" + ((from.getDayOfMonth()<10) ? "0" : "") + from.getDayOfMonth();
-        String to_str = to.getYear()+"-"+((to.getMonthOfYear()<10) ? "0" : "") + to.getMonthOfYear() + "-" + ((to.getDayOfMonth()<10) ? "0" : "") + to.getDayOfMonth();
+    public Cursor getQueryData(String cat, String fr_str, String to_str){
         String selectionDate = COL_9+" BETWEEN '"+fr_str+"' AND '"+to_str+"'";
         //Log.wtf("QUERY",fr_str);
         //Log.wtf("QUERY",to_str);
@@ -124,9 +122,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return db.rawQuery( "SELECT "+COL_2+", SUM("+ COL_1 +") FROM "+ TABLE_NAME + " GROUP BY " + COL_2,null);
     }
 
-    public Cursor getSummaryOfQuery(String cat, DateTime from, DateTime to){
-        String fr_str = from.getYear()+"-"+((from.getMonthOfYear()<10) ? "0" : "") + from.getMonthOfYear() + "-" + ((from.getDayOfMonth()<10) ? "0" : "") + from.getDayOfMonth();
-        String to_str = to.getYear()+"-"+((to.getMonthOfYear()<10) ? "0" : "") + to.getMonthOfYear() + "-" + ((to.getDayOfMonth()<10) ? "0" : "") + to.getDayOfMonth();
+    public Cursor getSummaryOfQuery(String cat, String fr_str, String to_str){
         String selectionDate = COL_9+" BETWEEN '"+fr_str+"' AND '"+to_str+"'";
         Log.wtf("",cat);
         SQLiteDatabase db = this.getReadableDatabase();
@@ -146,6 +142,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public Integer deleteData (String id){
         SQLiteDatabase db = this.getWritableDatabase();
         return db.delete(TABLE_NAME, "ID = ?", new String[] {id});
+    }
+
+    public Integer deleteLastEntry(){
+        SQLiteDatabase db = this.getWritableDatabase();
+        return db.delete(TABLE_NAME, "ID = SELECT MAX(ID) FROM " + TABLE_NAME, null);
     }
 
     public String exportDatabase(String database) {

@@ -429,7 +429,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
         setDefaultDatesOnPickers();
 
-        txv_statssetsumup.setText(getString(R.string.dates_of) + d_to_s(d1f) + getString(R.string.until) + d_to_s(d1t) + getString(R.string.summarized) + " ("+date_diff1+" Tage)");
+        txv_statssetsumup.setText(getString(R.string.dates_of) + d_to_s(d1f, "de") + getString(R.string.until) + d_to_s(d1t, "de") + getString(R.string.summarized) + " ("+date_diff1+" Tage)");
     }
 
     public void onSettingsClick(View view) {
@@ -521,16 +521,21 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         d1t = new DateTime(p.getInt("Y1T", c.get(Calendar.YEAR)), p.getInt("M1T", c.get(Calendar.MONTH)+1), p.getInt("D1T", c.get(Calendar.DAY_OF_MONTH)+1),13,0,0);
         d2f = new DateTime(p.getInt("Y2F", c.get(Calendar.YEAR)), p.getInt("M2F", c.get(Calendar.MONTH)+1), p.getInt("D2F", c.get(Calendar.DAY_OF_MONTH)),13,0,0);
         d2t = new DateTime(p.getInt("Y2T", c.get(Calendar.YEAR)), p.getInt("M2T", c.get(Calendar.MONTH)+1), p.getInt("D2T", c.get(Calendar.DAY_OF_MONTH)+1),13,0,0);
-        btn_date1from.setText(getString(R.string.from) + d_to_s(d1f));
-        btn_date1to.setText(getString(R.string.to) + d_to_s(d1t));
-        btn_date2from.setText(getString(R.string.from) + d_to_s(d2f));
-        btn_date2to.setText(getString(R.string.to) + d_to_s(d2t));
+        btn_date1from.setText(getString(R.string.from) + d_to_s(d1f, "de"));
+        btn_date1to.setText(getString(R.string.to) + d_to_s(d1t, "de"));
+        btn_date2from.setText(getString(R.string.from) + d_to_s(d2f, "de"));
+        btn_date2to.setText(getString(R.string.to) + d_to_s(d2t, "de"));
         calcDateDiff(d1f,d1t,1);
         calcDateDiff(d2f,d2t,2);
     }
 
-    public String d_to_s(DateTime a) {
-        return ((a.getDayOfMonth()<10) ? "0" : "")+a.getDayOfMonth()+"."+((a.getMonthOfYear()<10) ? "0" : "")+a.getMonthOfYear()+"." + a.getYear();
+    public String d_to_s(DateTime a, String form) {
+        switch (form){
+            case "de": return ((a.getDayOfMonth()<10) ? "0" : "")+a.getDayOfMonth()+"."+((a.getMonthOfYear()<10) ? "0" : "")+a.getMonthOfYear()+"." + a.getYear();
+            case "en":
+            default : return a.getYear()+"-"+((a.getMonthOfYear()<10) ? "0" : "")+a.getMonthOfYear()+"-" +((a.getDayOfMonth()<10) ? "0" : "")+a.getDayOfMonth() ;
+        }
+
     }
 
     public void addData(View view){
@@ -618,7 +623,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
             //über ID von einträgen?
             builder.insert(0, res.getInt(1) + getString(R.string.für) + res.getString(4)
                     +" ("+kurz+", "+ res.getString(3)+")" + getString(R.string.am) + res.getInt(7)+"."
-                    +res.getInt(6)+". ("+daysInbetween+", "+res.getInt(0)+") " + getString(R.string.in) +kurzOrt+"\n");
+                    +res.getInt(6)+". ("+daysInbetween+", "+res.getInt(0)+")" + getString(R.string.in) +kurzOrt+"\n");
 
             String dataCategory = res.getString(res.getColumnIndex("CATEGORY"));
             String dataSub = res.getString(res.getColumnIndex("SUBCATEGORY"));
@@ -730,22 +735,22 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
             SharedPreferences.Editor e = getSharedPreferences("USER_PREFERENCES_STATS", MODE_PRIVATE).edit();
             switch (datePickerMode){
                 case 1: d1f = new DateTime(arg1, arg2+1, arg3, 13, 0,0);
-                    btn_date1from.setText(getString(R.string.from) + d_to_s(d1f));
+                    btn_date1from.setText(getString(R.string.from) + d_to_s(d1f, "de"));
                     calcDateDiff(d1f, d1t, 1);
                     e.putInt("Y1F", d1f.getYear()); e.putInt("M1F", d1f.getMonthOfYear());
                     e.putInt("D1F", d1f.getDayOfMonth()); break;
                 case 2: d1t = new DateTime(arg1, arg2+1, arg3, 13, 0,0);
-                    btn_date1to.setText(getString(R.string.to) + d_to_s(d1t));
+                    btn_date1to.setText(getString(R.string.to) + d_to_s(d1t, "de"));
                     calcDateDiff(d1f, d1t, 1);
                     e.putInt("Y1T", d1t.getYear()); e.putInt("M1T", d1t.getMonthOfYear());
                     e.putInt("D1T", d1t.getDayOfMonth()); break;
                 case 3: d2f = new DateTime(arg1, arg2+1, arg3, 13, 0,0);
-                    btn_date2from.setText(getString(R.string.from) + d_to_s(d2f));
+                    btn_date2from.setText(getString(R.string.from) + d_to_s(d2f, "de"));
                     calcDateDiff(d2f, d2t, 2);
                     e.putInt("Y2F", d2f.getYear()); e.putInt("M2F", d2f.getMonthOfYear());
                     e.putInt("D2F", d2f.getDayOfMonth()); break;
                 case 4: d2t = new DateTime(arg1, arg2+1, arg3, 13, 0,0);
-                    btn_date2to.setText(getString(R.string.to) + d_to_s(d2t));
+                    btn_date2to.setText(getString(R.string.to) + d_to_s(d2t, "de"));
                     calcDateDiff(d2f, d2t, 2);
                     e.putInt("Y2T", d1f.getYear()); e.putInt("M2T", d2t.getMonthOfYear());
                     e.putInt("D2T", d2t.getDayOfMonth()); break;
@@ -874,7 +879,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         StringBuilder builderStats2 = new StringBuilder();
         ArrayList<ArrayList<String>> content = new ArrayList<>();
         //TODO cbx_sorting
-        Cursor r = myDB.getQueryData(chosen_cats, d1f, d1t);
+        Cursor r = myDB.getQueryData(chosen_cats, d_to_s(d1f, "en"), d_to_s(d1t, "en"));
         while (r.moveToNext()) {
             ArrayList<String> entry = new ArrayList<>(
                     Arrays.asList(r.getString(0), r.getString(1), r.getString(2),
@@ -891,8 +896,8 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
             builderDetails.append(content.get(i).toString()+"\n");
         }
 
-        builderStats.append(getString(R.string.dates_of) + d_to_s(d1f) + getString(R.string.until) + d_to_s(d1t) + getString(R.string.summarized)+" ("+date_diff1+" Tage)\n\n");
-        r = myDB.getSummaryOfQuery(chosen_cats, d1f, d1t);
+        builderStats.append(getString(R.string.dates_of) + d_to_s(d1f, "de") + getString(R.string.until) + d_to_s(d1t, "de") + getString(R.string.summarized)+" ("+date_diff1+" Tage)\n\n");
+        r = myDB.getSummaryOfQuery(chosen_cats, d_to_s(d1f, "en"), d_to_s(d1t, "en"));
         r.move(-1); // da mit movetonext (Schleife) auf id=0 gegangen wird
         while (r.moveToNext()){
             int amt = r.getInt(1);
@@ -978,7 +983,6 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
     }
 
-    //TODO kein exit bei drehen des Handys
     //TODO delete last entry function + button
     //TODO suche ermöglichen
     //TODO raw query ermöglichen
