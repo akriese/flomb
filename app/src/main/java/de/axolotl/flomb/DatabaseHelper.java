@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Environment;
 import android.util.Log;
+import android.widget.TableLayout;
 import android.widget.Toast;
 
 import org.joda.time.DateTime;
@@ -48,7 +49,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL("CREATE TABLE "+TABLE_NAME+" ("+COL_0+" INTEGER PRIMARY KEY AUTOINCREMENT,"+COL_1+" INTEGER,"+COL_2+" TEXT,"+
-        COL_3+" TEXT,"+COL_4+" TEXT,"+COL_5+" INTEGER,"+COL_6+" INTEGER,"+COL_7+" INTEGER,"+COL_8+" TEXT)");
+        COL_3+" TEXT,"+COL_4+" TEXT,"+COL_5+" INTEGER,"+COL_6+" INTEGER,"+COL_7+" INTEGER,"+COL_8+" TEXT,"+ COL_9+" TEXT)");
     }
 
     @Override
@@ -107,14 +108,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         //Log.wtf("QUERY",fr_str);
         //Log.wtf("QUERY",to_str);
         //Log.wtf("QUERY", selectionDate);
-        Log.wtf("",cat);
+        //Log.wtf("",cat);
         SQLiteDatabase db = this.getReadableDatabase();
         return db.rawQuery("SELECT * FROM "+TABLE_NAME+" WHERE " + selectionDate + " AND " + COL_2 + " IN (" + cat + ") ORDER BY "+COL_9+" DESC",null);
     }
 
-    public Cursor getNewest100(){
+    public Cursor getNewestN(int n){
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery( "SELECT * FROM "+ TABLE_NAME + " ORDER BY " + COL_9 + " DESC LIMIT 100",null);
+        return db.rawQuery( "SELECT * FROM "+ TABLE_NAME + " ORDER BY " + COL_9 + " DESC LIMIT " + n,null);
+    }
+
+    public Cursor getTimeSpanAll(){
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.rawQuery("SELECT julianday(MAX("+ COL_9 +")) - julianday(MIN("+COL_9+")) FROM " + TABLE_NAME, null);
     }
 
     public Cursor getSummary(){
@@ -122,9 +128,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return db.rawQuery( "SELECT "+COL_2+", SUM("+ COL_1 +") FROM "+ TABLE_NAME + " GROUP BY " + COL_2,null);
     }
 
+    public Cursor getSummaryOfSub(){
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.rawQuery( "SELECT "+COL_2+", "+COL_3+", SUM("+ COL_1 +") FROM "+ TABLE_NAME + " GROUP BY " + COL_2 + ", " + COL_3,null);
+    }
+
     public Cursor getSummaryOfQuery(String cat, String fr_str, String to_str){
         String selectionDate = COL_9+" BETWEEN '"+fr_str+"' AND '"+to_str+"'";
-        Log.wtf("",cat);
+        //Log.wtf("",cat);
         SQLiteDatabase db = this.getReadableDatabase();
         return db.rawQuery("SELECT "+COL_2+ ", SUM("+ COL_1 +") FROM "+TABLE_NAME+" WHERE "+selectionDate+" AND "+COL_2+" IN ("+cat+") GROUP BY "+COL_2,null);
     }

@@ -93,7 +93,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
             other_subcategories, move_subcategories, big_subcategories;
 
     private ArrayList<ArrayList<String>> sub_categories;
-    private int daysInbetween, newestDayValue;
+    private int daysInbetween, timeSpan;
     private DateTime d1f, d1t, d2f, d2t;
     public ArrayList<ArrayAdapter<CharSequence>> adapter_array;
     public ArrayList<RadioButton> rbn_list;
@@ -416,17 +416,6 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         btn_date2from.setText(R.string.date2from);
         btn_date2to.setText(R.string.date2to);
 
-        Cursor res = myDB.getAllData();
-        DateTimeZone UTC = DateTimeZone.forID("UTC");
-        DateTime travelStart = new DateTime(2017,7,5,12,0,0,UTC);
-        while (res.moveToNext()) {
-            DateTime addDatedt = new DateTime(res.getInt(5), res.getInt(6), res.getInt(7), 13, 0, 0, UTC);
-            daysInbetween = Days.daysBetween(travelStart.toLocalDateTime(), addDatedt.toLocalDateTime()).getDays();
-            if (daysInbetween>newestDayValue){
-                newestDayValue=daysInbetween;
-            }
-        }
-
         setDefaultDatesOnPickers();
 
         txv_statssetsumup.setText(getString(R.string.dates_of) + d_to_s(d1f, "de") + getString(R.string.until) + d_to_s(d1t, "de") + getString(R.string.summarized) + " ("+date_diff1+" Tage)");
@@ -529,6 +518,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         calcDateDiff(d2f,d2t,2);
     }
 
+    //date to string
     public String d_to_s(DateTime a, String form) {
         switch (form){
             case "de": return ((a.getDayOfMonth()<10) ? "0" : "")+a.getDayOfMonth()+"."+((a.getMonthOfYear()<10) ? "0" : "")+a.getMonthOfYear()+"." + a.getYear();
@@ -589,24 +579,12 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     }
 
     public void updateFrontPage(){ //getAllData
-        Cursor res = myDB.getAllData();
+        Cursor res = myDB.getNewestN(100);
 
         StringBuilder builder = new StringBuilder();
-        //region number reset
-        newestDayValue = 0;
-        overall_all = 0;
-
-        for (int i = 0; i < summed_subs.length; i++)
-            for (int j = 0; j < summed_subs[i].length; j++)
-                summed_subs[i][j] = 0;
-        //endregion
-
-        DateTimeZone UTC = DateTimeZone.forID("UTC");
-        DateTime travelStart= new DateTime(2017,7,5,12,0,0,UTC);
 
         while (res.moveToNext()){
-            String kurz;
-            String kurzOrt;
+            String kurz, kurzOrt;
             String s = res.getString(2);
             kurz = categories_short.get(categories.indexOf(s));
 
@@ -617,49 +595,32 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
                 default: kurzOrt = res.getString(8); break;
             }
 
-            DateTime addDatedt = new DateTime(res.getInt(5),res.getInt(6),res.getInt(7),13,0,0,UTC);
-            daysInbetween=Days.daysBetween(travelStart.toLocalDateTime(),addDatedt.toLocalDateTime()).getDays();
-            //TODO set maximum count of lines to be shown
-            //über ID von einträgen?
-            builder.insert(0, res.getInt(1) + getString(R.string.für) + res.getString(4)
+            builder.append(res.getInt(1) + getString(R.string.für) + res.getString(4)
                     +" ("+kurz+", "+ res.getString(3)+")" + getString(R.string.am) + res.getInt(7)+"."
-                    +res.getInt(6)+". ("+daysInbetween+", "+res.getInt(0)+")" + getString(R.string.in) +kurzOrt+"\n");
-
-            String dataCategory = res.getString(res.getColumnIndex("CATEGORY"));
-            String dataSub = res.getString(res.getColumnIndex("SUBCATEGORY"));
-
-            int cat_index = categories.indexOf(dataCategory);
-            int sub_index = sub_categories.get(cat_index).indexOf(dataSub);
-            summed_subs[cat_index][sub_index] += res.getInt(1);
-
-
-            if (daysInbetween>newestDayValue){
-                newestDayValue=daysInbetween;
-            }
+                    +res.getInt(6)+". ("+res.getInt(0)+")" + getString(R.string.in) +kurzOrt+"\n");
         }
 
-        if (newestDayValue==0){
-            newestDayValue=1;
+        res = myDB.getTimeSpanAll();
+        res.moveToNext();
+        timeSpan = res.getInt(0);
+        timeSpan += (timeSpan == 0 ? 1 : 0);
+
+        builder.insert(0,"\n");
+
+        res = myDB.getSummary();
+        while(res.moveToNext()){
+            int amt = res.getInt(1);
+            builder.insert(0,res.getString(0)+": "+amt+" Cents ("+roundTo2Dec((amt+0.0)/timeSpan)+" pro Tag)\n");
+            overall_all += amt;
         }
-
-        for (int i = 0; i < summed_cat.length; i++)
-            summed_cat[i] = IntStream.of(summed_subs[i]).sum();
-
-        overall_all = IntStream.of(summed_cat).sum();
-        overall_withoutBig=overall_all-summed_cat[4];
-
-        builder.insert(0,"Without Big: "+overall_withoutBig+" Cents ("+overall_withoutBig/newestDayValue+" pro Tag)\n\n");
-        builder.insert(0,"\nALL: "+ overall_all +" Cents ("+overall_all/newestDayValue+" pro Tag)\n");
-        for (int i = 0; i < summed_cat.length; i++) {
-            builder.insert(0,categories.get(i) + " " + summed_cat[i] +" Cents ("+summed_cat[i]/newestDayValue+" pro Tag)\n");
-        }
+        builder.insert(0,"Insgesamt: "+overall_all+" Cents ("+roundTo2Dec((overall_all+0.0)/timeSpan)+" pro Tag)\n");
 
         builder.append("\n");
 
-        for (int i = 0; i < summed_subs.length; i++) {
-            for (int j = 0; j < summed_subs[i].length; j++) {
-                builder.append(sub_categories.get(i).get(j) + ": " + summed_subs[i][j] + " Cents\n");
-            }
+        res = myDB.getSummaryOfSub();
+        while (res.moveToNext()){
+            int amt = res.getInt(2);
+            builder.append(res.getString(1)+" ("+res.getString(0)+"): "+amt+" Cents ("+roundTo2Dec((amt+0.0)/timeSpan)+" pro Tag)\n");
         }
 
         txv_sumup11.setText(builder.toString());
@@ -866,6 +827,10 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         }
     }
 
+    public double roundTo2Dec(double a){
+        return ((int) (100*a))/100.0;
+    }
+
     public void analyzeData(){
         String chosen_cats = "";
         for (int i = 0; i < cbx_list.size(); i++) {
@@ -878,7 +843,6 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         StringBuilder builderStats = new StringBuilder();
         StringBuilder builderStats2 = new StringBuilder();
         ArrayList<ArrayList<String>> content = new ArrayList<>();
-        //TODO cbx_sorting
         Cursor r = myDB.getQueryData(chosen_cats, d_to_s(d1f, "en"), d_to_s(d1t, "en"));
         while (r.moveToNext()) {
             ArrayList<String> entry = new ArrayList<>(
@@ -901,9 +865,8 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         r.move(-1); // da mit movetonext (Schleife) auf id=0 gegangen wird
         while (r.moveToNext()){
             int amt = r.getInt(1);
-            //TODO auf zwei stellen runden
             //TODO als Euro darstellen
-            builderStats.append(r.getString(0)+": "+amt+"("+ (amt+0.0)/date_diff1 +" pro Tag)\n");
+            builderStats.append(r.getString(0)+": "+amt+"("+ roundTo2Dec((amt+0.0)/date_diff1) +" pro Tag)\n");
             Log.wtf("hi",r.getString(0)+": "+r.getString(1));
         }
 
