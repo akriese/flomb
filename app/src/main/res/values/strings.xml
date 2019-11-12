@@ -36,6 +36,9 @@
     <string name="place">Ort</string>
     <string name="amount">Betrag</string>
     <string name="add">Hinzufügen</string>
+    <string name="search">Suchen</string>
+    <string name="query">Abfragen</string>
+    <string name="results">Ergebisse</string>
     <string-array name="categories">
         <item>Food</item>
         <item>Living</item>

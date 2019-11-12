@@ -50,6 +50,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -67,7 +68,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
     //region Android ELemente
     public Button btn_addfinal, btn_add, btn_statssets, btn_datepicker, btn_back, btn_settings, btn_resetEntry, btn_updateEntry;
-    public EditText edt_place, edt_description, edt_amount, edt_editRow;
+    public EditText edt_place, edt_description, edt_amount, edt_editRow, edt_search;
     public TextView txv_headline, txv_addsumup, txv_sumup11, txv_statssetsumup, txv_statsdisplay;
     public RadioButton rbn_f, rbn_l, rbn_o, rbn_m, rbn_b, rbn_single, rbn_compare, rbn_change;
     public CheckBox cbx_keepdata, cbx_minus, cbx_f, cbx_l, cbx_m, cbx_o, cbx_b;
@@ -93,7 +94,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
             other_subcategories, move_subcategories, big_subcategories;
 
     private ArrayList<ArrayList<String>> sub_categories;
-    private int daysInbetween, timeSpan;
+    private int daysInbetween;
     private DateTime d1f, d1t, d2f, d2t;
     public ArrayList<ArrayAdapter<CharSequence>> adapter_array;
     public ArrayList<RadioButton> rbn_list;
@@ -161,6 +162,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         btn_resetEntry = findViewById(R.id.btn_resetEntry);
         btn_updateEntry = findViewById(R.id.btn_updateEntry);
         edt_editRow = findViewById(R.id.edt_editRowId);
+        edt_search = findViewById(R.id.edt_search);
         //endregion
         //region stats
         rll_stats = findViewById(R.id.rll_stats);
@@ -447,10 +449,17 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         txv_headline.setText(getString(R.string.app_name));
         btn_back.setVisibility(View.INVISIBLE);
         if (rll_stats.getVisibility()==View.VISIBLE){
-            rll_statssets.setVisibility(View.VISIBLE);
             rll_stats.setVisibility(View.INVISIBLE);
             btn_back.setVisibility(View.VISIBLE);
-            txv_headline.setText(R.string.statistics);
+            String head = getResources().getString(R.string.statistics);
+            if (txv_headline.getText() == head){
+                rll_statssets.setVisibility(View.VISIBLE);
+                txv_headline.setText(head);
+            }
+            else {
+                rll_settings.setVisibility(View.VISIBLE);
+                txv_headline.setText(R.string.settings);
+            }
         }
     }
 
@@ -525,7 +534,13 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
             case "en":
             default : return a.getYear()+"-"+((a.getMonthOfYear()<10) ? "0" : "")+a.getMonthOfYear()+"-" +((a.getDayOfMonth()<10) ? "0" : "")+a.getDayOfMonth() ;
         }
+    }
 
+    //cents to euros
+    public String c_to_e(double cents){
+        DecimalFormat df = new DecimalFormat("0.00");
+        double val = (double)((int) cents)/100.0;
+        return df.format(val);
     }
 
     public void addData(View view){
@@ -550,6 +565,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
     public void insertToDB () {
         boolean isInserted = myDB.insertData(amount, category, subcategory, description, dateYear, dateMonth, dateDay, place);
+        Log.wtf("INSERT TEST", ""+dateYear+","+dateMonth+","+dateDay);
         if (isInserted){
             Toast.makeText(MainActivity.this,getString(R.string.entry_added),Toast.LENGTH_LONG).show();
         }
@@ -579,8 +595,8 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     }
 
     public void updateFrontPage(){ //getAllData
-        Cursor res = myDB.getNewestN(100);
-
+        Cursor res = myDB.getPastMonth();
+        if (res.getCount() == 0) return;
         StringBuilder builder = new StringBuilder();
 
         while (res.moveToNext()){
@@ -595,32 +611,45 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
                 default: kurzOrt = res.getString(8); break;
             }
 
-            builder.append(res.getInt(1) + getString(R.string.für) + res.getString(4)
-                    +" ("+kurz+", "+ res.getString(3)+")" + getString(R.string.am) + res.getInt(7)+"."
-                    +res.getInt(6)+". ("+res.getInt(0)+")" + getString(R.string.in) +kurzOrt+"\n");
+            builder.insert(0, c_to_e(res.getInt(1)) + "€" +getString(R.string.für) + res.getString(4)
+                    +" ("+kurz+", "+ res.getString(3)+")" + getString(R.string.am) + res.getString(9)+" ("+res.getInt(0)+")" + getString(R.string.in) +kurzOrt+"\n");
+
+            String dataCategory = res.getString(res.getColumnIndex("CATEGORY"));
+            String dataSub = res.getString(res.getColumnIndex("SUBCATEGORY"));
+
+            int cat_index = categories.indexOf(dataCategory);
+            int sub_index = sub_categories.get(cat_index).indexOf(dataSub);
+            summed_subs[cat_index][sub_index] += res.getInt(1);
         }
 
-        res = myDB.getTimeSpanAll();
-        res.moveToNext();
-        timeSpan = res.getInt(0);
-        timeSpan += (timeSpan == 0 ? 1 : 0);
+        for (int i = 0; i < summed_cat.length; i++)
+            summed_cat[i] = IntStream.of(summed_subs[i]).sum();
 
-        builder.insert(0,"\n");
+        overall_all = IntStream.of(summed_cat).sum();
+        overall_withoutBig=overall_all-summed_cat[4];
 
-        res = myDB.getSummary();
-        while(res.moveToNext()){
-            int amt = res.getInt(1);
-            builder.insert(0,res.getString(0)+": "+amt+" Cents ("+roundTo2Dec((amt+0.0)/timeSpan)+" pro Tag)\n");
-            overall_all += amt;
+        String d1,d2;
+        res.moveToFirst();
+        d1 = res.getString(9);
+        res.moveToLast();
+        d2 = res.getString(9);
+        Cursor r2 = myDB.getDaysBetween(d1,d2);
+        r2.moveToFirst();
+        double between = (double) r2.getInt(0) + 1;
+        Log.wtf("BETWEEN", ""+between);
+
+        builder.insert(0,"Without Big: "+c_to_e(overall_withoutBig)+"€ ("+c_to_e(overall_withoutBig/between)+"€ pro Tag)\n\n");
+        builder.insert(0,"\nALL: "+ c_to_e(overall_all) +"€ ("+c_to_e(overall_all/between)+"€ pro Tag)\n");
+        for (int i = 0; i < summed_cat.length; i++) {
+            builder.insert(0,categories.get(i) + ": " + c_to_e(summed_cat[i]) +"€ ("+c_to_e(summed_cat[i]/between)+"€ pro Tag)\n");
         }
-        builder.insert(0,"Insgesamt: "+overall_all+" Cents ("+roundTo2Dec((overall_all+0.0)/timeSpan)+" pro Tag)\n");
 
         builder.append("\n");
 
-        res = myDB.getSummaryOfSub();
-        while (res.moveToNext()){
-            int amt = res.getInt(2);
-            builder.append(res.getString(1)+" ("+res.getString(0)+"): "+amt+" Cents ("+roundTo2Dec((amt+0.0)/timeSpan)+" pro Tag)\n");
+        for (int i = 0; i < summed_subs.length; i++) {
+            for (int j = 0; j < summed_subs[i].length; j++) {
+                builder.append(sub_categories.get(i).get(j) + ": " + c_to_e(summed_subs[i][j]) + "€\n");
+            }
         }
 
         txv_sumup11.setText(builder.toString());
@@ -744,6 +773,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     }
     //endregion
 
+    //TODO delete last entry function + button
     public void onResetChosenClick(View view) {
         int deletedRows = 0;
         if (edt_editRow.getText().toString().equals("")) {
@@ -827,10 +857,6 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         }
     }
 
-    public double roundTo2Dec(double a){
-        return ((int) (100*a))/100.0;
-    }
-
     public void analyzeData(){
         String chosen_cats = "";
         for (int i = 0; i < cbx_list.size(); i++) {
@@ -844,6 +870,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         StringBuilder builderStats2 = new StringBuilder();
         ArrayList<ArrayList<String>> content = new ArrayList<>();
         Cursor r = myDB.getQueryData(chosen_cats, d_to_s(d1f, "en"), d_to_s(d1t, "en"));
+        if (r.getCount() == 0) return;
         while (r.moveToNext()) {
             ArrayList<String> entry = new ArrayList<>(
                     Arrays.asList(r.getString(0), r.getString(1), r.getString(2),
@@ -865,12 +892,10 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         r.move(-1); // da mit movetonext (Schleife) auf id=0 gegangen wird
         while (r.moveToNext()){
             int amt = r.getInt(1);
-            //TODO als Euro darstellen
-            builderStats.append(r.getString(0)+": "+amt+"("+ roundTo2Dec((amt+0.0)/date_diff1) +" pro Tag)\n");
-            Log.wtf("hi",r.getString(0)+": "+r.getString(1));
+            builderStats.append(r.getString(0)+": "+amt+"("+ c_to_e((amt+0.0)/date_diff1) +"€ pro Tag)\n");
+            Log.wtf("WHILE",r.getString(0)+": "+r.getString(1));
         }
 
-        Log.wtf("",""+builderStats.length());
         //Cursor res2 = myDB.getQueryData(str_arr, d2f, d2t);
 
         StringBuilder builder = new StringBuilder();
@@ -946,7 +971,45 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
     }
 
-    //TODO delete last entry function + button
-    //TODO suche ermöglichen
     //TODO raw query ermöglichen
+    public StringBuilder rawQuery(String q, boolean raw){
+        Cursor r;
+        if (raw) r = myDB.doQuery(q);
+        else r = myDB.searchQuery(q);
+
+        int col = r.getColumnCount();
+        StringBuilder sb = new StringBuilder();
+        while (r.moveToNext()){
+            String s = "";
+            for (int i = 0; i < col; i++){
+                s += r.getString(i) + ", ";
+            }
+            sb.append(s+"\n");
+        }
+        return sb;
+    }
+
+    public void displayQueryResults(StringBuilder res, boolean raw){
+        //TODO minimiere Keyboard
+        //InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        //imm.hideSoftInputFromWindow();
+        rll_settings.setVisibility(View.INVISIBLE);
+        rll_stats.setVisibility(View.VISIBLE);
+        txv_headline.setText(R.string.results);
+
+        txv_statsdisplay.setText(res);
+    }
+
+    public void onQueryClick(View view) {
+        StringBuilder res = rawQuery(edt_search.getText().toString(),true);
+        displayQueryResults(res, true);
+    }
+
+    public void onSearchClick(View view) {
+        StringBuilder res = rawQuery(edt_search.getText().toString(),false);
+        displayQueryResults(res, false);
+    }
+
+
+    //TODO nicht jedes mal die ganze Datenbank abrufen --> hohe Laufzeit bei "Zurück"
 }
