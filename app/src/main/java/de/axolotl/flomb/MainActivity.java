@@ -905,6 +905,14 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     }
 
     public void onBackupDBClick(View view) {
+        int dec = myDB.mapLoanToWorkingHours("2019-10-01", "2019-11-01", 42000, "hiofa");
+        if (dec == 0)
+            Toast.makeText(MainActivity.this, "Wage mapped to given dates!", Toast.LENGTH_LONG).show();
+        else if (dec == 1)
+            Toast.makeText(MainActivity.this, "No entries found to map!", Toast.LENGTH_LONG).show();
+        else
+            Toast.makeText(MainActivity.this, "Problem with mapping the given data!", Toast.LENGTH_LONG).show();
+        /*
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED){
             //not granted, ask for permission
@@ -914,6 +922,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
             //granted, do backup
             Toast.makeText(MainActivity.this, myDB.exportDatabase("flomb.db"), Toast.LENGTH_LONG).show();
         }
+        */
     }
     //endregion
 

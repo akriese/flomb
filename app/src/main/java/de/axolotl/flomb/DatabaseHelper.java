@@ -99,7 +99,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void insertDateColumn(){
         SQLiteDatabase db = this.getWritableDatabase();
         db.execSQL("ALTER TABLE " + TABLE_NAME + " ADD COLUMN DATESTR TEXT");
-        db.execSQL("UPDATE " + TABLE_NAME + " SET DATESTR = date(YEAR||'-'||(CASE WHEN MONTH LIKE '_' THEN ('0'||MONTH) ELSE MONTH END)||'-'||(CASE WHEN DAY LIKE '_' THEN ('0'||DAY) ELSE DAY END))");
+        db.execSQL("UPDATE " + TABLE_NAME + " SET DATESTR = date(YEAR||'-'||(CASE WHEN MONTH LIKE '_' " +
+                "THEN ('0'||MONTH) ELSE MONTH END)||'-'||(CASE WHEN DAY LIKE '_' THEN ('0'||DAY) ELSE DAY END))");
     }
 
     public Cursor getQueryData(String cat, String fr_str, String to_str){
@@ -162,6 +163,21 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public Integer deleteData (String id){
         SQLiteDatabase db = this.getWritableDatabase();
         return db.delete(TABLE_NAME, "ID = ?", new String[] {id});
+    }
+
+    public int mapLoanToWorkingHours(String fr_str, String to_str, int sum, String purpose){
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor res = db.rawQuery("SELECT SUM("+COL_1+") FROM "+TABLE_NAME+" WHERE "+
+                COL_4+" = '"+purpose+"' AND "+COL_9+" BETWEEN '"+fr_str+"' AND '"+to_str+"' AND "+COL_3+" = 'Wage'", null);
+        res.moveToFirst();
+        int hours = res.getInt(0);
+        res.close();
+        if (hours == 0)
+            return 1;
+        double perHour = sum / (double) hours;
+        db.execSQL("UPDATE " + TABLE_NAME + " SET AMOUNT = AMOUNT * "+perHour*-1+" WHERE "+
+                COL_4+" = '"+purpose+"' AND "+COL_9+" BETWEEN '"+fr_str+"' AND '"+to_str+"' AND "+COL_3+" = 'Wage'");
+        return 0;
     }
 
     public Integer deleteLastEntry(){
