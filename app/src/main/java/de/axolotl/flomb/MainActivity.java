@@ -298,6 +298,61 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         PACKAGE_NAME = getApplicationContext().getPackageName();
     }
 
+    public void updateFrontPage(){ //getAllData
+        Cursor res = myDB.getPastMonth();
+        if (res.getCount() == 0) return;
+        StringBuilder builder = new StringBuilder();
+
+        while (res.moveToNext()){
+            String kurz, kurzOrt;
+            String s = res.getString(2);
+            kurz = categories_short.get(categories.indexOf(s));
+
+            switch (res.getString(8)){
+                case "Berlin": kurzOrt = "B."; break;
+                case "Jena": kurzOrt = "J."; break;
+                case "unterwegs": kurzOrt = "un."; break;
+                default: kurzOrt = res.getString(8); break;
+            }
+
+            builder.append(c_to_e(res.getInt(1)) +getString(R.string.für) + res.getString(4)
+                    +" ("+kurz+", "+ res.getString(3)+")" + getString(R.string.am) + res.getString(9)+" ("+res.getInt(0)+")" + getString(R.string.in) +kurzOrt+"\n");
+        }
+
+
+        builder.insert(0, "\n");
+
+        //ermittle #Tage des letzten Monats
+        String d1,d2;
+        res.moveToFirst();
+        d2 = res.getString(9);
+        res.moveToLast();
+        d1 = res.getString(9);
+        Cursor r2 = myDB.getDaysBetween(d1,d2);
+        r2.moveToFirst();
+        double between = (double) r2.getInt(0) + 1;
+        Log.wtf("BETWEEN", ""+between);
+
+        res = myDB.getSummaryOfPastMonth();
+        overall_all = overall_withoutBig = 0;
+        while (res.moveToNext()){
+            int amnt = res.getInt(1);
+            String cat = res.getString(0);
+            overall_all += amnt; overall_withoutBig += amnt;
+            if (cat.equals("Big"))
+                overall_withoutBig -= amnt;
+            builder.insert(0, cat + ": " + c_to_e(amnt) +" ("+c_to_e(amnt/between)+" pro Tag)\n");
+        }
+
+        builder.insert(0,"Without Big: "+c_to_e(overall_withoutBig)+" ("+c_to_e(overall_withoutBig/between)+" pro Tag)\n\n");
+        builder.insert(0,"ALL: "+ c_to_e(overall_all) +" ("+c_to_e(overall_all/between)+" pro Tag)\n");
+
+
+        txv_sumup11.setText(builder.toString());
+
+        res.close();
+    }
+
     //region Main Movements
     public void goToAddLayout(){
         rll_add.setVisibility(View.VISIBLE);
@@ -493,28 +548,8 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     }
     //endregion
 
-    //Datenbank auf SD laden
-    public static void backupDatabase() throws IOException {
-        //Open your local db as the input stream
-        String inFileName = "/data/data/de/axolotl/flomb/databases/flomb.db";
-        File dbFile = new File(inFileName);
-        FileInputStream fis = new FileInputStream(dbFile);
-
-        String outFileName = Environment.getExternalStorageDirectory() + "/flomb.db";
-        //Open the empty db as the output stream
-        OutputStream output = new FileOutputStream(outFileName);
-        //transfer bytes from the inputfile to the outputfile
-        byte[] buffer = new byte[1024];
-        int length;
-        while ((length = fis.read(buffer))>0){
-            output.write(buffer, 0, length);
-        }
-        //Close the streams
-        output.flush();
-        output.close();
-        fis.close();
-    }
-
+    //region Datepicker
+    //TODO: go to only String and DateTime-Mode (no int gibberish anymore)
     public void setDefaultDatesOnPickers(){
         SharedPreferences p = getSharedPreferences("USER_PREFERENCES_STATS", MODE_PRIVATE);
         Calendar c = Calendar.getInstance();
@@ -530,157 +565,6 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         calcDateDiff(d2f,d2t,2);
     }
 
-    //date to string
-    public String d_to_s(DateTime a, String form) {
-        switch (form){
-            case "de": return ((a.getDayOfMonth()<10) ? "0" : "")+a.getDayOfMonth()+"."+((a.getMonthOfYear()<10) ? "0" : "")+a.getMonthOfYear()+"." + a.getYear();
-            case "en":
-            default : return a.getYear()+"-"+((a.getMonthOfYear()<10) ? "0" : "")+a.getMonthOfYear()+"-" +((a.getDayOfMonth()<10) ? "0" : "")+a.getDayOfMonth() ;
-        }
-    }
-
-    //cents to euros
-    public String c_to_e(double cents){
-        DecimalFormat df = new DecimalFormat("0.00");
-        double val = (double)((int) cents)/100.0;
-        return df.format(val) + "€";
-    }
-
-    public void addData(View view){
-        addOrUpdate();
-    }
-
-    public void addOrUpdate(){
-        updateInformation();
-        if (checkAddData())
-            if (!update_dialog) insertToDB();
-            else updateDB();
-        else Toast.makeText(MainActivity.this,getString(R.string.missing_data),Toast.LENGTH_LONG).show();
-    }
-
-    public boolean checkAddData(){
-        if (edt_description.getText().toString().length() == 0) return false;
-        if (edt_place.getText().toString().length() == 0) return false;
-        if (amount == 0) return false;
-        if (btn_datepicker.getText().toString().equals(getString(R.string.date))) return false;
-        return true;
-    }
-
-    public void insertToDB () {
-        boolean isInserted = myDB.insertData(amount, category, subcategory, description, dateYear, dateMonth, dateDay, place);
-        Log.wtf("INSERT TEST", ""+dateYear+","+dateMonth+","+dateDay);
-        if (isInserted){
-            Toast.makeText(MainActivity.this,getString(R.string.entry_added),Toast.LENGTH_LONG).show();
-        }
-        else Toast.makeText(MainActivity.this,getString(R.string.entry_not_added),Toast.LENGTH_LONG).show();
-        keepData();
-    }
-
-    public void updateDB () {
-        boolean isInserted = myDB.updateData(id, amount, category, subcategory, description, dateYear, dateMonth, dateDay, place);
-        if (isInserted){
-            Toast.makeText(MainActivity.this,getString(R.string.entry_updated),Toast.LENGTH_LONG).show();
-        }
-        else Toast.makeText(MainActivity.this,getString(R.string.entry_not_updated),Toast.LENGTH_LONG).show();
-        goBack();
-    }
-
-    public void updateInformation(){
-        if (edt_amount.getText().length()==0){
-            edt_amount.setText("0");
-        }
-        amount = Integer.parseInt(edt_amount.getText().toString());
-        if (cbx_minus.isChecked()) amount=amount*(-1);
-        description = edt_description.getText().toString();
-        place = edt_place.getText().toString();
-
-        txv_addsumup.setText(amount+getString(R.string.für)+description+","+getString(R.string.am)+dateAdd+","+getString(R.string.in)+place);
-    }
-
-    public void updateFrontPage(){ //getAllData
-        Cursor res = myDB.getPastMonth();
-        if (res.getCount() == 0) return;
-        StringBuilder builder = new StringBuilder();
-
-        while (res.moveToNext()){
-            String kurz, kurzOrt;
-            String s = res.getString(2);
-            kurz = categories_short.get(categories.indexOf(s));
-
-            switch (res.getString(8)){
-                case "Berlin": kurzOrt = "B."; break;
-                case "Jena": kurzOrt = "J."; break;
-                case "unterwegs": kurzOrt = "un."; break;
-                default: kurzOrt = res.getString(8); break;
-            }
-
-            builder.append(c_to_e(res.getInt(1)) +getString(R.string.für) + res.getString(4)
-                    +" ("+kurz+", "+ res.getString(3)+")" + getString(R.string.am) + res.getString(9)+" ("+res.getInt(0)+")" + getString(R.string.in) +kurzOrt+"\n");
-        }
-
-
-        builder.insert(0, "\n");
-
-        //ermittle #Tage des letzten Monats
-        String d1,d2;
-        res.moveToFirst();
-        d2 = res.getString(9);
-        res.moveToLast();
-        d1 = res.getString(9);
-        Cursor r2 = myDB.getDaysBetween(d1,d2);
-        r2.moveToFirst();
-        double between = (double) r2.getInt(0) + 1;
-        Log.wtf("BETWEEN", ""+between);
-
-        res = myDB.getSummaryOfPastMonth();
-        overall_all = overall_withoutBig = 0;
-        while (res.moveToNext()){
-            int amnt = res.getInt(1);
-            String cat = res.getString(0);
-            overall_all += amnt; overall_withoutBig += amnt;
-            if (cat.equals("Big"))
-                overall_withoutBig -= amnt;
-            builder.insert(0, cat + ": " + c_to_e(amnt) +" ("+c_to_e(amnt/between)+" pro Tag)\n");
-        }
-
-        builder.insert(0,"Without Big: "+c_to_e(overall_withoutBig)+" ("+c_to_e(overall_withoutBig/between)+" pro Tag)\n\n");
-        builder.insert(0,"ALL: "+ c_to_e(overall_all) +" ("+c_to_e(overall_all/between)+" pro Tag)\n");
-
-
-        txv_sumup11.setText(builder.toString());
-
-        res.close();
-    }
-
-    public void onRbnGroupClick(View view) {
-        int checkedIndex = -1;
-        if (rbn_f.isChecked()) {
-            checkedIndex = 0;
-        }
-        else if (rbn_l.isChecked()) {
-            checkedIndex = 1;
-        }
-        else if (rbn_o.isChecked()){
-            checkedIndex = 2;
-        }
-        else if (rbn_m.isChecked()){
-            checkedIndex = 3;
-        }
-        else if (rbn_b.isChecked()){
-            checkedIndex = 4;
-        }
-
-        spi_description.setAdapter(adapter_array.get(checkedIndex));
-        category = categories.get(checkedIndex);
-        subcategory = sub_categories.get(checkedIndex).get(0);
-        updateInformation();
-    }
-
-    public void cbxMinusClick(View view) {
-        updateInformation();
-    }
-
-    //region Datepicker
     public void showDatePickerDialog(){
         int loc_y = dateYear;
         int loc_m = dateMonth;
@@ -768,21 +652,86 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     }
     //endregion
 
-    public void onResetChosenClick(View view) {
-        int deletedRows;
-        if (edt_editRow.getText().toString().equals("-1")) {
-            deletedRows = myDB.deleteLastEntry();
+    //region Add + children
+    public void onRbnGroupClick(View view) {
+        int checkedIndex = -1;
+        if (rbn_f.isChecked()) {
+            checkedIndex = 0;
         }
-        else deletedRows = myDB.deleteData(edt_editRow.getText().toString());
-        //TODO delete dialog, asking
-        if (deletedRows > 0){
-            Toast.makeText(MainActivity.this,R.string.data_del, Toast.LENGTH_LONG).show();
-        } else {
-            Toast.makeText(MainActivity.this,R.string.data_n_del, Toast.LENGTH_LONG).show();
+        else if (rbn_l.isChecked()) {
+            checkedIndex = 1;
         }
+        else if (rbn_o.isChecked()){
+            checkedIndex = 2;
+        }
+        else if (rbn_m.isChecked()){
+            checkedIndex = 3;
+        }
+        else if (rbn_b.isChecked()){
+            checkedIndex = 4;
+        }
+
+        spi_description.setAdapter(adapter_array.get(checkedIndex));
+        category = categories.get(checkedIndex);
+        subcategory = sub_categories.get(checkedIndex).get(0);
+        updateInformation();
     }
 
-    //region helper functions
+    public void cbxMinusClick(View view) {
+        updateInformation();
+    }
+
+    public void addData(View view){
+        addOrUpdate();
+    }
+
+    public void addOrUpdate(){
+        updateInformation();
+        if (checkAddData())
+            if (!update_dialog) insertToDB();
+            else updateDB();
+        else Toast.makeText(MainActivity.this,getString(R.string.missing_data),Toast.LENGTH_LONG).show();
+    }
+
+    public boolean checkAddData(){
+        if (edt_description.getText().toString().length() == 0) return false;
+        if (edt_place.getText().toString().length() == 0) return false;
+        if (amount == 0) return false;
+        if (btn_datepicker.getText().toString().equals(getString(R.string.date))) return false;
+        return true;
+    }
+
+    public void insertToDB () {
+        boolean isInserted = myDB.insertData(amount, category, subcategory, description, dateYear, dateMonth, dateDay, place);
+        Log.wtf("INSERT TEST", ""+dateYear+","+dateMonth+","+dateDay);
+        if (isInserted){
+            Toast.makeText(MainActivity.this,getString(R.string.entry_added),Toast.LENGTH_LONG).show();
+        }
+        else Toast.makeText(MainActivity.this,getString(R.string.entry_not_added),Toast.LENGTH_LONG).show();
+        keepData();
+    }
+
+    public void updateDB () {
+        boolean isInserted = myDB.updateData(id, amount, category, subcategory, description, dateYear, dateMonth, dateDay, place);
+        if (isInserted){
+            Toast.makeText(MainActivity.this,getString(R.string.entry_updated),Toast.LENGTH_LONG).show();
+        }
+        else Toast.makeText(MainActivity.this,getString(R.string.entry_not_updated),Toast.LENGTH_LONG).show();
+        goBack();
+    }
+
+    public void updateInformation(){
+        if (edt_amount.getText().length()==0){
+            edt_amount.setText("0");
+        }
+        amount = Integer.parseInt(edt_amount.getText().toString());
+        if (cbx_minus.isChecked()) amount=amount*(-1);
+        description = edt_description.getText().toString();
+        place = edt_place.getText().toString();
+
+        txv_addsumup.setText(amount+getString(R.string.für)+description+","+getString(R.string.am)+dateAdd+","+getString(R.string.in)+place);
+    }
+
     public void keepData(){
         SharedPreferences placeAndDate = getSharedPreferences("USER_PREFERENCES_ADD", MODE_PRIVATE);
         SharedPreferences.Editor editor = placeAndDate.edit();
@@ -812,14 +761,9 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         editor.apply();
         updateFrontPage();
     }
+    //endregion add + children
 
-    public int getIndexOfCheckedRbn(ArrayList<RadioButton> list){
-        for (int i = 0; i < list.size(); i++) {
-            if (list.get(i).isChecked()) return i;
-        }
-        return 0;
-    }
-
+    //region Stats + children
     public void onRbnStatsClick(View view) {
         if (rbn_single.isChecked()){
             lnl_date2.setVisibility(View.INVISIBLE);
@@ -869,7 +813,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         while (r.moveToNext()) {
             ArrayList<String> entry = new ArrayList<>(
                     Arrays.asList(r.getString(0), c_to_e(r.getInt(1)), r.getString(2),
-                    r.getString(3), r.getString(4), r.getString(8), r.getString(9))
+                            r.getString(3), r.getString(4), r.getString(8), r.getString(9))
             );
             content.add(entry);
         }
@@ -897,21 +841,84 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         builder.append("\n\n"+builderDetails);
         txv_statsdisplay.setText(builder.toString());
     }
+    //endregion
 
-    public void onBackupDBClick(View view) {
-        /*
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED){
-            //not granted, ask for permission
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                    MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
-        } else {
-            //granted, do backup
-            Toast.makeText(MainActivity.this, myDB.exportDatabase("flomb.db"), Toast.LENGTH_LONG).show();
+    //region Helper functions
+    //date to string
+    public String d_to_s(DateTime a, String form) {
+        switch (form){
+            case "de": return ((a.getDayOfMonth()<10) ? "0" : "")+a.getDayOfMonth()+"."+((a.getMonthOfYear()<10) ? "0" : "")+a.getMonthOfYear()+"." + a.getYear();
+            case "en":
+            default : return a.getYear()+"-"+((a.getMonthOfYear()<10) ? "0" : "")+a.getMonthOfYear()+"-" +((a.getDayOfMonth()<10) ? "0" : "")+a.getDayOfMonth() ;
         }
-        */
+    }
+
+    public DateTime s_to_d(String date, String form){
+        DateTime r;
+        String[] arr;
+        switch (form){
+            case "de":
+                arr = date.split(".");
+                r = new DateTime(Integer.parseInt(arr[2]), Integer.parseInt(arr[1]), Integer.parseInt(arr[0]),0,0);
+                break;
+            case "en":
+            default:
+                arr = date.split("-");
+                r = new DateTime(Integer.parseInt(arr[0]), Integer.parseInt(arr[1]), Integer.parseInt(arr[2]),0,0);
+        }
+        return r;
+    }
+
+    //cents to euros
+    public String c_to_e(double cents){
+        DecimalFormat df = new DecimalFormat("0.00");
+        double val = (double)((int) cents)/100.0;
+        return df.format(val) + "€";
+    }
+
+    public int getIndexOfCheckedRbn(ArrayList<RadioButton> list){
+        for (int i = 0; i < list.size(); i++) {
+            if (list.get(i).isChecked()) return i;
+        }
+        return 0;
+    }
+
+    public static void backupDatabase() throws IOException {
+        //Open your local db as the input stream
+        String inFileName = "/data/data/de/axolotl/flomb/databases/flomb.db";
+        File dbFile = new File(inFileName);
+        FileInputStream fis = new FileInputStream(dbFile);
+
+        String outFileName = Environment.getExternalStorageDirectory() + "/flomb.db";
+        //Open the empty db as the output stream
+        OutputStream output = new FileOutputStream(outFileName);
+        //transfer bytes from the inputfile to the outputfile
+        byte[] buffer = new byte[1024];
+        int length;
+        while ((length = fis.read(buffer))>0){
+            output.write(buffer, 0, length);
+        }
+        //Close the streams
+        output.flush();
+        output.close();
+        fis.close();
     }
     //endregion
+
+    //region Settings + children
+    public void onResetChosenClick(View view) {
+        int deletedRows;
+        if (edt_editRow.getText().toString().equals("-1")) {
+            deletedRows = myDB.deleteLastEntry();
+        }
+        else deletedRows = myDB.deleteData(edt_editRow.getText().toString());
+        //TODO delete dialog, asking
+        if (deletedRows > 0){
+            Toast.makeText(MainActivity.this,R.string.data_del, Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(MainActivity.this,R.string.data_n_del, Toast.LENGTH_LONG).show();
+        }
+    }
 
     public void onUpdateClick(View view) {
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -1027,4 +1034,19 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
     public void onCreateAboClick(View view) {
     }
+
+    public void onBackupDBClick(View view) {
+        /*
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED){
+            //not granted, ask for permission
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
+        } else {
+            //granted, do backup
+            Toast.makeText(MainActivity.this, myDB.exportDatabase("flomb.db"), Toast.LENGTH_LONG).show();
+        }
+        */
+    }
+    //endregion settings + children
 }
