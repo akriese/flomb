@@ -73,20 +73,18 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     public RadioButton rbn_f, rbn_l, rbn_o, rbn_m, rbn_b, rbn_single, rbn_compare, rbn_change;
     public CheckBox cbx_keepdata, cbx_minus, cbx_f, cbx_l, cbx_m, cbx_o, cbx_b;
     public LinearLayout lnl_description, lnl_dateplace, lnl_cbxfateb, lnl_editRow, lnl_date1, lnl_date2;
-    public RelativeLayout rll_add, rll_start, rll_statssets, rll_settings, rll_stats;
+    public RelativeLayout rll_add, rll_start, rll_statssets, rll_settings, rll_stats, rll_abo_loan;
     public ScrollView scv_sumup1;
     public Spinner spi_description;
     public Button btn_date1from, btn_date1to, btn_date2from, btn_date2to;
 
     //endregion
     //region other Elements and variables
-    private int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE=0;
+    private int app_state;
     private Calendar calendar;
     private int nowYear, nowMonth, nowDay, amount=0, dateYear, dateMonth, dateDay, id, datePickerMode;
     private int overall_all, overall_withoutBig, date_diff1, date_diff2;
-    private int overall_f2=0,overall_a2=0,overall_t2=0,overall_o2=0,overall_b2=0, overall_all2;
     private int[][] summed_subs;
-    private int[] summed_cat;
     private boolean update_dialog=false;
     private String description="Beschreibung", category, subcategory, place;
     private String dateAdd, dateString, date1fromString, date1toString, date2fromString, date2toString;
@@ -101,6 +99,8 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     public ArrayList<CheckBox> cbx_list;
     DatabaseHelper myDB;
     DatabaseHelperBackup myDBBackup;
+    private static final int FLOMB_START=0, FLOMB_ADD=1, FLOMB_SETTINGS=2, FLOMB_STATSETS=3, FLOMB_STATSHOW=4, FLOMB_LOAN=5,
+            FLOMB_QUERYSHOW=6, FLOMB_UPDATE=7;
 
     //endregion
 
@@ -170,6 +170,9 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         lnl_date2 = findViewById(R.id.lnl_date2);
         txv_statsdisplay = findViewById(R.id.txv_statsdisplay);
         //endregion
+        //region abo / loan
+        rll_abo_loan = findViewById(R.id.rll_abo_loanmapping);
+        //endregion
         //endregion
 
         myDB = new DatabaseHelper(this);
@@ -184,9 +187,9 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         rll_statssets.setVisibility(View.INVISIBLE);
         rll_settings.setVisibility(View.INVISIBLE);
         rll_stats.setVisibility(View.INVISIBLE);
+        rll_abo_loan.setVisibility(View.INVISIBLE);
         btn_back.setVisibility(View.INVISIBLE);
-
-        //sub_categories = new ArrayList<List<String>>();
+        app_state = FLOMB_START;
 
         categories = new ArrayList<>(Arrays.asList(getResources().getStringArray(R.array.categories)));
         categories_short = new ArrayList<>(Arrays.asList(getResources().getStringArray(R.array.categories_short)));
@@ -201,15 +204,6 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         sub_categories.add(other_subcategories);
         sub_categories.add(move_subcategories);
         sub_categories.add(big_subcategories);
-
-        summed_subs = new int[5][];
-        summed_subs[0] = new int[food_subcategories.size()];
-        summed_subs[1] = new int[living_subcategories.size()];
-        summed_subs[2] = new int[other_subcategories.size()];
-        summed_subs[3] = new int[move_subcategories.size()];
-        summed_subs[4] = new int[big_subcategories.size()];
-        summed_cat = new int[categories.size()];
-
 
         adapter_array = new ArrayList<>();
         adapter_array.add(ArrayAdapter.createFromResource(this,
@@ -388,6 +382,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
     public void onAddClick(View view) { //navigates from Main Menu to Add Menu
         goToAddLayout();
+        app_state = FLOMB_ADD;
         txv_headline.setText(R.string.add);
         btn_addfinal.setText(R.string.add);
         update_dialog = false;
@@ -407,6 +402,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     }
 
     public void onStatssetsClick(View view) { //navigates from Main Menu to Statistic's Settings Menu
+        app_state = FLOMB_STATSETS;
         rll_start.setVisibility(View.INVISIBLE);
         rll_statssets.setVisibility(View.VISIBLE);
         btn_back.setVisibility(View.VISIBLE);
@@ -424,6 +420,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     }
 
     public void onSettingsClick(View view) {
+        app_state = FLOMB_SETTINGS;
         rll_start.setVisibility(View.INVISIBLE);
         rll_settings.setVisibility(View.VISIBLE);
         btn_back.setVisibility(View.VISIBLE);
@@ -431,35 +428,41 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     }
 
     public void goBack(){
-        if (rll_add.getVisibility()==View.VISIBLE){
-            rll_add.setVisibility(View.INVISIBLE);
-            rll_start.setVisibility(View.VISIBLE);
-            keepData();
-        }
-        if (rll_statssets.getVisibility()==View.VISIBLE){
-            rll_statssets.setVisibility(View.INVISIBLE);
-            rll_start.setVisibility(View.VISIBLE);
-        }
-        if (rll_settings.getVisibility()==View.VISIBLE){
-            rll_settings.setVisibility(View.INVISIBLE);
-            rll_start.setVisibility(View.VISIBLE);
-
-            updateFrontPage();
-        }
-        txv_headline.setText(getString(R.string.app_name));
-        btn_back.setVisibility(View.INVISIBLE);
-        if (rll_stats.getVisibility()==View.VISIBLE){
+        // hier wird auf eine Einstellungsseite zurückgegeangen
+        if (app_state == FLOMB_STATSHOW || app_state == FLOMB_QUERYSHOW || app_state == FLOMB_UPDATE){
             rll_stats.setVisibility(View.INVISIBLE);
             btn_back.setVisibility(View.VISIBLE);
-            String head = getResources().getString(R.string.statistics);
-            if (txv_headline.getText() == head){
+            if (app_state == FLOMB_STATSHOW){
                 rll_statssets.setVisibility(View.VISIBLE);
-                txv_headline.setText(head);
+                txv_headline.setText(getResources().getString(R.string.statistics));
+                app_state = FLOMB_STATSETS;
             }
             else {
                 rll_settings.setVisibility(View.VISIBLE);
                 txv_headline.setText(R.string.settings);
+                rll_add.setVisibility(View.INVISIBLE);
+                app_state = FLOMB_SETTINGS;
             }
+        }
+        //alle der nächsten drei gehen mit "Back" auf die Startseite zurück
+        else {
+            if (app_state == FLOMB_ADD){
+                rll_add.setVisibility(View.INVISIBLE);
+                rll_start.setVisibility(View.VISIBLE);
+                keepData();
+            }
+            else if (app_state == FLOMB_STATSETS){
+                rll_statssets.setVisibility(View.INVISIBLE);
+                rll_start.setVisibility(View.VISIBLE);
+            }
+            else if (app_state == FLOMB_SETTINGS){
+                rll_settings.setVisibility(View.INVISIBLE);
+                rll_start.setVisibility(View.VISIBLE);
+                updateFrontPage();
+            }
+            txv_headline.setText(getString(R.string.app_name));
+            btn_back.setVisibility(View.INVISIBLE);
+            app_state = FLOMB_START;
         }
     }
 
@@ -469,7 +472,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
     @Override
     public void onBackPressed() {
-        if (rll_start.getVisibility()==View.VISIBLE) {// exit dialog
+        if (app_state == FLOMB_START) {// exit dialog
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setMessage("Wanna exit, biiitch?")
                     .setCancelable(false)
@@ -540,7 +543,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     public String c_to_e(double cents){
         DecimalFormat df = new DecimalFormat("0.00");
         double val = (double)((int) cents)/100.0;
-        return df.format(val);
+        return df.format(val) + "€";
     }
 
     public void addData(View view){
@@ -611,46 +614,38 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
                 default: kurzOrt = res.getString(8); break;
             }
 
-            builder.insert(0, c_to_e(res.getInt(1)) + "€" +getString(R.string.für) + res.getString(4)
+            builder.append(c_to_e(res.getInt(1)) +getString(R.string.für) + res.getString(4)
                     +" ("+kurz+", "+ res.getString(3)+")" + getString(R.string.am) + res.getString(9)+" ("+res.getInt(0)+")" + getString(R.string.in) +kurzOrt+"\n");
-
-            String dataCategory = res.getString(res.getColumnIndex("CATEGORY"));
-            String dataSub = res.getString(res.getColumnIndex("SUBCATEGORY"));
-
-            int cat_index = categories.indexOf(dataCategory);
-            int sub_index = sub_categories.get(cat_index).indexOf(dataSub);
-            summed_subs[cat_index][sub_index] += res.getInt(1);
         }
 
-        for (int i = 0; i < summed_cat.length; i++)
-            summed_cat[i] = IntStream.of(summed_subs[i]).sum();
 
-        overall_all = IntStream.of(summed_cat).sum();
-        overall_withoutBig=overall_all-summed_cat[4];
+        builder.insert(0, "\n");
 
+        //ermittle #Tage des letzten Monats
         String d1,d2;
         res.moveToFirst();
-        d1 = res.getString(9);
-        res.moveToLast();
         d2 = res.getString(9);
+        res.moveToLast();
+        d1 = res.getString(9);
         Cursor r2 = myDB.getDaysBetween(d1,d2);
         r2.moveToFirst();
         double between = (double) r2.getInt(0) + 1;
         Log.wtf("BETWEEN", ""+between);
 
-        builder.insert(0,"Without Big: "+c_to_e(overall_withoutBig)+"€ ("+c_to_e(overall_withoutBig/between)+"€ pro Tag)\n\n");
-        builder.insert(0,"\nALL: "+ c_to_e(overall_all) +"€ ("+c_to_e(overall_all/between)+"€ pro Tag)\n");
-        for (int i = 0; i < summed_cat.length; i++) {
-            builder.insert(0,categories.get(i) + ": " + c_to_e(summed_cat[i]) +"€ ("+c_to_e(summed_cat[i]/between)+"€ pro Tag)\n");
+        res = myDB.getSummaryOfPastMonth();
+        overall_all = overall_withoutBig = 0;
+        while (res.moveToNext()){
+            int amnt = res.getInt(1);
+            String cat = res.getString(0);
+            overall_all += amnt; overall_withoutBig += amnt;
+            if (cat.equals("Big"))
+                overall_withoutBig -= amnt;
+            builder.insert(0, cat + ": " + c_to_e(amnt) +" ("+c_to_e(amnt/between)+" pro Tag)\n");
         }
 
-        builder.append("\n");
+        builder.insert(0,"Without Big: "+c_to_e(overall_withoutBig)+" ("+c_to_e(overall_withoutBig/between)+" pro Tag)\n\n");
+        builder.insert(0,"ALL: "+ c_to_e(overall_all) +" ("+c_to_e(overall_all/between)+" pro Tag)\n");
 
-        for (int i = 0; i < summed_subs.length; i++) {
-            for (int j = 0; j < summed_subs[i].length; j++) {
-                builder.append(sub_categories.get(i).get(j) + ": " + c_to_e(summed_subs[i][j]) + "€\n");
-            }
-        }
 
         txv_sumup11.setText(builder.toString());
 
@@ -773,12 +768,10 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     }
     //endregion
 
-    //TODO delete last entry function + button
     public void onResetChosenClick(View view) {
-        int deletedRows = 0;
-        if (edt_editRow.getText().toString().equals("")) {
-            //TODO delete last entry
-            myDB.deleteData("-1");
+        int deletedRows;
+        if (edt_editRow.getText().toString().equals("-1")) {
+            deletedRows = myDB.deleteLastEntry();
         }
         else deletedRows = myDB.deleteData(edt_editRow.getText().toString());
         //TODO delete dialog, asking
@@ -853,6 +846,8 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         else {
             rll_statssets.setVisibility(View.INVISIBLE);
             rll_stats.setVisibility(View.VISIBLE);
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
             analyzeData();
         }
     }
@@ -873,7 +868,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         if (r.getCount() == 0) return;
         while (r.moveToNext()) {
             ArrayList<String> entry = new ArrayList<>(
-                    Arrays.asList(r.getString(0), r.getString(1), r.getString(2),
+                    Arrays.asList(r.getString(0), c_to_e(r.getInt(1)), r.getString(2),
                     r.getString(3), r.getString(4), r.getString(8), r.getString(9))
             );
             content.add(entry);
@@ -889,10 +884,9 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
         builderStats.append(getString(R.string.dates_of) + d_to_s(d1f, "de") + getString(R.string.until) + d_to_s(d1t, "de") + getString(R.string.summarized)+" ("+date_diff1+" Tage)\n\n");
         r = myDB.getSummaryOfQuery(chosen_cats, d_to_s(d1f, "en"), d_to_s(d1t, "en"));
-        r.move(-1); // da mit movetonext (Schleife) auf id=0 gegangen wird
         while (r.moveToNext()){
             int amt = r.getInt(1);
-            builderStats.append(r.getString(0)+": "+amt+"("+ c_to_e((amt+0.0)/date_diff1) +"€ pro Tag)\n");
+            builderStats.append(r.getString(0)+": "+c_to_e(amt)+" ("+ c_to_e((amt+0.0)/date_diff1) +" pro Tag)\n");
             Log.wtf("WHILE",r.getString(0)+": "+r.getString(1));
         }
 
@@ -905,13 +899,6 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     }
 
     public void onBackupDBClick(View view) {
-        int dec = myDB.mapLoanToWorkingHours("2019-10-01", "2019-11-01", 42000, "hiofa");
-        if (dec == 0)
-            Toast.makeText(MainActivity.this, "Wage mapped to given dates!", Toast.LENGTH_LONG).show();
-        else if (dec == 1)
-            Toast.makeText(MainActivity.this, "No entries found to map!", Toast.LENGTH_LONG).show();
-        else
-            Toast.makeText(MainActivity.this, "Problem with mapping the given data!", Toast.LENGTH_LONG).show();
         /*
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED){
@@ -927,8 +914,11 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     //endregion
 
     public void onUpdateClick(View view) {
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         id = Integer.parseInt(edt_editRow.getText().toString());
-        Cursor res = myDB.searchForUpdateEntry(id);
+        boolean last = (id == -1);
+        Cursor res = myDB.searchForUpdateEntry(id, last);
         edt_editRow.setText("");
         if (res.getCount() == 0){
             Toast.makeText(MainActivity.this,getString(R.string.id_not_available),Toast.LENGTH_LONG).show();
@@ -937,6 +927,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         update_dialog = true;
         rll_settings.setVisibility(View.INVISIBLE);
         goToAddLayout();
+        app_state = FLOMB_UPDATE;
         txv_headline.setText(R.string.update_entry);
         btn_addfinal.setText(R.string.update_entry);
 
@@ -971,16 +962,9 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         cbx_minus.setChecked(amount<0);
         edt_amount.setText(Integer.toString(Math.abs(amount)));
 
-        //amount parity gets updated in updateInformation()
-        //amount = Math.abs(amount);
-
         updateInformation();
-
-        //update entry, go back to settings layout
-
     }
 
-    //TODO raw query ermöglichen
     public StringBuilder rawQuery(String q, boolean raw){
         Cursor r;
         if (raw) r = myDB.doQuery(q);
@@ -999,26 +983,48 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     }
 
     public void displayQueryResults(StringBuilder res, boolean raw){
-        //TODO minimiere Keyboard
-        //InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-        //imm.hideSoftInputFromWindow();
         rll_settings.setVisibility(View.INVISIBLE);
         rll_stats.setVisibility(View.VISIBLE);
         txv_headline.setText(R.string.results);
 
         txv_statsdisplay.setText(res);
+        app_state = FLOMB_QUERYSHOW;
     }
 
     public void onQueryClick(View view) {
-        StringBuilder res = rawQuery(edt_search.getText().toString(),true);
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        StringBuilder res;
+        try {
+            res = rawQuery(edt_search.getText().toString(),true);
+        }
+        catch(Exception e){
+            Toast.makeText(MainActivity.this, R.string.bad_query, Toast.LENGTH_LONG).show();
+            return;
+        }
         displayQueryResults(res, true);
     }
 
     public void onSearchClick(View view) {
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         StringBuilder res = rawQuery(edt_search.getText().toString(),false);
         displayQueryResults(res, false);
     }
 
+    public void onMapLoanClick(View view) {
+        rll_abo_loan.setVisibility(View.VISIBLE);
+        rll_settings.setVisibility(View.INVISIBLE);
+        app_state = FLOMB_LOAN;
+        int dec = myDB.mapLoanToWorkingHours("2019-10-01", "2019-11-01", 42000, "hiofa");
+        if (dec == 0)
+            Toast.makeText(MainActivity.this, "Wage mapped to given dates!", Toast.LENGTH_LONG).show();
+        else if (dec == 1)
+            Toast.makeText(MainActivity.this, "No entries found to map!", Toast.LENGTH_LONG).show();
+        else
+            Toast.makeText(MainActivity.this, "Problem with mapping the given data!", Toast.LENGTH_LONG).show();
+    }
 
-    //TODO nicht jedes mal die ganze Datenbank abrufen --> hohe Laufzeit bei "Zurück"
+    public void onCreateAboClick(View view) {
+    }
 }

@@ -110,22 +110,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         //Log.wtf("QUERY", selectionDate);
         Log.wtf("CATS",cat);
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery("SELECT * FROM "+TABLE_NAME+" WHERE " + selectionDate + " AND " + COL_2 + " IN (" + cat + ") ORDER BY "+COL_9+" DESC",null);
-    }
-
-    public Cursor getNewest100(){
-        SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery( "SELECT * FROM "+ TABLE_NAME + " ORDER BY " + COL_9 + " DESC LIMIT 100",null);
+        return db.rawQuery("SELECT * FROM "+TABLE_NAME+" WHERE " + selectionDate + " AND " +
+                COL_2 + " IN (" + cat + ") ORDER BY "+COL_9+" DESC",null);
     }
 
     public Cursor getPastMonth(){
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery( "SELECT * FROM "+ TABLE_NAME + " WHERE " + COL_9 + " BETWEEN date('now', '-1 month') AND date('now') ORDER BY " + COL_9,null);
+        return db.rawQuery( "SELECT * FROM "+ TABLE_NAME + " WHERE " + COL_9 +
+                " BETWEEN date('now', '-1 month') AND date('now') ORDER BY " + COL_9 + " DESC",null);
     }
 
-    public Cursor getSummary(){
+    public Cursor getSummaryOfPastMonth(){
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery( "SELECT "+COL_2+", SUM("+ COL_1 +") FROM "+ TABLE_NAME + " GROUP BY " + COL_2,null);
+        return db.rawQuery( "SELECT "+COL_2+", SUM("+ COL_1 +") FROM "+ TABLE_NAME + " WHERE " +
+                COL_9 + " BETWEEN date('now', '-1 month') AND date('now')"+ " GROUP BY " + COL_2,null);
     }
 
     public Cursor getDaysBetween(String d1, String d2){
@@ -140,9 +138,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return db.rawQuery("SELECT "+COL_2+ ", SUM("+ COL_1 +") FROM "+TABLE_NAME+" WHERE "+selectionDate+" AND "+COL_2+" IN ("+cat+") GROUP BY "+COL_2,null);
     }
 
-    public Cursor searchForUpdateEntry(int id){
+    public Cursor searchForUpdateEntry(int id, boolean last){
         SQLiteDatabase db = this.getWritableDatabase();
-        return db.rawQuery("SELECT * FROM "+ TABLE_NAME + " WHERE " + COL_0 + "=" + id, null);
+        if (!last)
+            return db.rawQuery("SELECT * FROM "+ TABLE_NAME + " WHERE ID = " + id, null);
+        else
+            return db.rawQuery("SELECT * FROM "+TABLE_NAME+" WHERE ID = (SELECT MAX(ID) FROM "+TABLE_NAME+")", null);
     }
 
     public Cursor searchQuery(String s){
@@ -175,14 +176,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         if (hours == 0)
             return 1;
         double perHour = sum / (double) hours;
-        db.execSQL("UPDATE " + TABLE_NAME + " SET AMOUNT = AMOUNT * "+perHour*-1+" WHERE "+
+        db.execSQL("UPDATE " + TABLE_NAME + " SET "+COL_4+" = "+COL_4+"|| ' ' || ' ' || + AMOUNT, AMOUNT = AMOUNT * "+perHour*-1+" WHERE "+
                 COL_4+" = '"+purpose+"' AND "+COL_9+" BETWEEN '"+fr_str+"' AND '"+to_str+"' AND "+COL_3+" = 'Wage'");
         return 0;
     }
 
     public Integer deleteLastEntry(){
         SQLiteDatabase db = this.getWritableDatabase();
-        return db.delete(TABLE_NAME, "ID = SELECT MAX(ID) FROM " + TABLE_NAME, null);
+        return db.delete(TABLE_NAME, "ID = (SELECT MAX(ID) FROM " + TABLE_NAME + ")", null);
     }
 
     public String exportDatabase(String database) {
@@ -215,4 +216,5 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             return "anderer Fehler";
         }
     }
+        //update entry, go back to settings layout
 }

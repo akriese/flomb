@@ -370,7 +370,7 @@
                 android:layout_height="wrap_content"
                 android:hint="ID"
                 android:id="@+id/edt_editRowId"
-                android:inputType="numberDecimal"
+                android:inputType="numberDecimal|numberSigned"
                 android:layout_weight="0.4"/>
 
             <Button
@@ -395,7 +395,7 @@
             android:id="@+id/btn_backupDB"
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
-            android:text="Backup DB"
+            android:text="@string/backup_db"
             android:onClick="onBackupDBClick"
             android:layout_centerHorizontal="true"
             android:layout_below="@id/lnl_editRow"/>
@@ -403,22 +403,24 @@
         <EditText
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:hint="Search"
+            android:hint="@string/search"
             android:id="@+id/edt_search"
             android:inputType="text"
             android:layout_below="@id/btn_backupDB"
             android:layout_centerHorizontal="true"/>
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:id="@+id/lnl_search_query"
             android:layout_below="@+id/edt_search"
-            android:layout_gravity="center">
+            android:layout_gravity="center"
+            android:paddingBottom="5dp"
+            android:orientation="horizontal">
 
             <Button
                 android:id="@+id/btn_search"
-                android:layout_height="wrap_content"
+                android:layout_height="fill_parent"
                 android:layout_width="0.0dip"
                 android:text="@string/search"
                 android:onClick="onSearchClick"
@@ -426,10 +428,43 @@
 
             <Button
                 android:id="@+id/btn_query"
-                android:layout_height="wrap_content"
+                android:layout_height="fill_parent"
                 android:layout_width="0.0dip"
                 android:text="@string/query"
                 android:onClick="onQueryClick"
+                android:layout_weight="1.0"/>
+        </LinearLayout>
+
+        <View
+            android:layout_width="fill_parent"
+            android:layout_height="3dp"
+            android:layout_below="@+id/lnl_search_query"
+            android:background="@color/colorPrimary"
+            android:id="@+id/rul_settings01"/>
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/lnl_abo_mapping"
+            android:paddingTop="5dp"
+            android:layout_below="@+id/rul_settings01"
+            android:layout_gravity="center"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btn_abo"
+                android:layout_height="fill_parent"
+                android:layout_width="0.0dip"
+                android:text="@string/abo"
+                android:onClick="onCreateAboClick"
+                android:layout_weight="1.0"/>
+
+            <Button
+                android:id="@+id/btn_mapping"
+                android:layout_height="fill_parent"
+                android:layout_width="0.0dip"
+                android:text="@string/mapping"
+                android:onClick="onMapLoanClick"
                 android:layout_weight="1.0"/>
         </LinearLayout>
 
@@ -461,6 +496,66 @@
 
     </RelativeLayout>
 
+
+    <!-- ABO / LOAN MAPPING -->
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/rll_abo_loanmapping"
+        android:layout_below="@id/txv_headline">
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/lnl_date_abo_loan"
+            android:layout_centerHorizontal="true"
+            android:gravity="center_horizontal"
+            android:layout_marginTop="20dp">
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/btn_date_abo_from"/>
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/btn_date_abo_to"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/lnl_edt_abo"
+            android:layout_below="@+id/lnl_date_abo_loan">
+
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/edt_desc_abo"
+                android:layout_weight="1.0" />
+
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/edt_amount_abo"
+                android:layout_weight="0.5" />
+
+        </LinearLayout>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:text="Anzeigen!"
+            android:id="@+id/btn_submit_abo_loan"
+            android:onClick="showStats"
+            android:layout_below="@id/lnl_edt_abo"
+            android:layout_marginTop="20dp"/>
+
+    </RelativeLayout>
+
+    <!-- BACK BUTTON -->
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

@@ -29,6 +29,7 @@
     <string name="settings">Einstellungen</string>
     <string name="data_n_del">Data not deleted!</string>
     <string name="id_not_available">Eintrag nicht vorhanden!</string>
+    <string name="bad_query">Ungültige Suchanfrage!</string>
     <string name="choose_category">Kategorie auswählen!</string>
     <string name="choose_date">Datum auswählen!</string>
     <string name="description">Beschreibung</string>
@@ -39,6 +40,9 @@
     <string name="search">Suchen</string>
     <string name="query">Abfragen</string>
     <string name="results">Ergebisse</string>
+    <string name="abo">Abo einrichten</string>
+    <string name="mapping">Lohn eintragen</string>
+    <string name="backup_db">Backup DB</string>
     <string-array name="categories">
         <item>Food</item>
         <item>Living</item>
