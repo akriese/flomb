@@ -45,6 +45,7 @@
     <string name="backup_db">Backup DB</string>
     <string name="exit_question">Wanna exit, biiiitch?</string>
     <string name="delete_question">Sicher, dass du den Eintrag löschen willst?</string>
+
     <string-array name="categories">
         <item>Food</item>
         <item>Living</item>

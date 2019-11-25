@@ -300,7 +300,10 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
     public void updateFrontPage(){ //getAllData
         Cursor res = myDB.getPastMonth();
-        if (res.getCount() == 0) return;
+        if (res.getCount() == 0){
+            txv_sumup11.setText("No Data available!");
+            return;
+        }
         StringBuilder builder = new StringBuilder();
 
         while (res.moveToNext()){
@@ -513,11 +516,11 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
             else if (app_state == FLOMB_SETTINGS){
                 rll_settings.setVisibility(View.INVISIBLE);
                 rll_start.setVisibility(View.VISIBLE);
-                updateFrontPage();
             }
             txv_headline.setText(getString(R.string.app_name));
             btn_back.setVisibility(View.INVISIBLE);
             app_state = FLOMB_START;
+            updateFrontPage();
         }
     }
 
@@ -907,27 +910,8 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     //endregion
 
     //region Settings + children
-    public void onResetChosenClick(View view) {
+    public void resetEntry(){
         int deletedRows;
-        boolean del = false;
-        // asking if you want to delete it
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage(getResources().getString(R.string.delete_question))
-                .setCancelable(false)
-                .setTitle("Delete Alert")
-                .setPositiveButton("Hell yeah!", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        //del = true;
-                        //TODO conditional deleting of entries
-                    }
-                })
-                .setNegativeButton("Nope!", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        dialog.cancel();
-                    }
-                });
-        AlertDialog alert = builder.create();
-        alert.show();
         if (edt_editRow.getText().toString().equals("-1")) {
             deletedRows = myDB.deleteLastEntry();
         }
@@ -937,6 +921,25 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         } else {
             Toast.makeText(MainActivity.this,R.string.data_n_del, Toast.LENGTH_LONG).show();
         }
+    }
+
+    public void onResetChosenClick(View view) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(getResources().getString(R.string.delete_question))
+                .setCancelable(true)
+                .setTitle("Delete Alert")
+                .setPositiveButton("Kill it!", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        resetEntry();
+                    }
+                })
+                .setNegativeButton("Let if live!", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.cancel();
+                    }
+                });
+        AlertDialog alert = builder.create();
+        alert.show();
     }
 
     public void onUpdateClick(View view) {
