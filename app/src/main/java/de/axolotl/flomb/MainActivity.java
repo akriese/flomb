@@ -790,6 +790,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         else {
             rll_statssets.setVisibility(View.INVISIBLE);
             rll_stats.setVisibility(View.VISIBLE);
+            app_state = FLOMB_STATSHOW;
             InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
             analyzeData();
@@ -908,11 +909,29 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     //region Settings + children
     public void onResetChosenClick(View view) {
         int deletedRows;
+        boolean del = false;
+        // asking if you want to delete it
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(getResources().getString(R.string.delete_question))
+                .setCancelable(false)
+                .setTitle("Delete Alert")
+                .setPositiveButton("Hell yeah!", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        //del = true;
+                        //TODO conditional deleting of entries
+                    }
+                })
+                .setNegativeButton("Nope!", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.cancel();
+                    }
+                });
+        AlertDialog alert = builder.create();
+        alert.show();
         if (edt_editRow.getText().toString().equals("-1")) {
             deletedRows = myDB.deleteLastEntry();
         }
         else deletedRows = myDB.deleteData(edt_editRow.getText().toString());
-        //TODO delete dialog, asking
         if (deletedRows > 0){
             Toast.makeText(MainActivity.this,R.string.data_del, Toast.LENGTH_LONG).show();
         } else {
