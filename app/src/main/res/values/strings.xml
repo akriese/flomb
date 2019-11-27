@@ -32,6 +32,7 @@
     <string name="bad_query">Ungültige Suchanfrage!</string>
     <string name="choose_category">Kategorie auswählen!</string>
     <string name="choose_date">Datum auswählen!</string>
+    <string name="choose_id">ID auswählen!</string>
     <string name="description">Beschreibung</string>
     <string name="remember">Merken</string>
     <string name="place">Ort</string>

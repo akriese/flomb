@@ -139,7 +139,7 @@
             android:hint="@string/amount"
             android:id="@+id/edt_amount"
             android:layout_below="@id/lnl_dateplace"
-            android:inputType="numberDecimal"
+            android:inputType="number"
             android:layout_marginTop="15dp"
             android:layout_centerHorizontal="true"/>
 
@@ -505,7 +505,7 @@
         android:layout_below="@id/txv_headline">
 
         <LinearLayout
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/lnl_date_abo_loan"
             android:layout_centerHorizontal="true"
@@ -524,32 +524,34 @@
         </LinearLayout>
 
         <LinearLayout
-            android:layout_width="fill_parent"
-            android:layout_height="match_parent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:id="@+id/lnl_edt_abo"
             android:layout_below="@+id/lnl_date_abo_loan">
 
             <EditText
-                android:layout_width="match_parent"
+                android:layout_width="0px"
                 android:layout_height="match_parent"
                 android:id="@+id/edt_desc_abo"
-                android:layout_weight="1.0" />
+                android:layout_weight="2.0"
+                android:hint="@string/description"/>
 
             <EditText
-                android:layout_width="match_parent"
+                android:layout_width="0px"
                 android:layout_height="match_parent"
                 android:id="@+id/edt_amount_abo"
-                android:layout_weight="0.5" />
-
+                android:layout_weight="1.0"
+                android:inputType="numberSigned"
+                android:hint="@string/amount"/>
         </LinearLayout>
 
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
-            android:text="Anzeigen!"
+            android:text="@string/mapping"
             android:id="@+id/btn_submit_abo_loan"
-            android:onClick="showStats"
+            android:onClick="mapLoan"
             android:layout_below="@id/lnl_edt_abo"
             android:layout_marginTop="20dp"/>
 

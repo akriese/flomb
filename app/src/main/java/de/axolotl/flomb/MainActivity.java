@@ -68,7 +68,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
     //region Android ELemente
     public Button btn_addfinal, btn_add, btn_statssets, btn_datepicker, btn_back, btn_settings, btn_resetEntry, btn_updateEntry;
-    public EditText edt_place, edt_description, edt_amount, edt_editRow, edt_search;
+    public EditText edt_place, edt_description, edt_amount, edt_editRow, edt_search, edt_loan_desc, edt_loan_amt;
     public TextView txv_headline, txv_addsumup, txv_sumup11, txv_statssetsumup, txv_statsdisplay;
     public RadioButton rbn_f, rbn_l, rbn_o, rbn_m, rbn_b, rbn_single, rbn_compare, rbn_change;
     public CheckBox cbx_keepdata, cbx_minus, cbx_f, cbx_l, cbx_m, cbx_o, cbx_b;
@@ -76,7 +76,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     public RelativeLayout rll_add, rll_start, rll_statssets, rll_settings, rll_stats, rll_abo_loan;
     public ScrollView scv_sumup1;
     public Spinner spi_description;
-    public Button btn_date1from, btn_date1to, btn_date2from, btn_date2to;
+    public Button btn_date1from, btn_date1to, btn_date2from, btn_date2to, btn_loan_to, btn_loan_from;
 
     //endregion
     //region other Elements and variables
@@ -93,7 +93,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
     private ArrayList<ArrayList<String>> sub_categories;
     private int daysInbetween;
-    private DateTime d1f, d1t, d2f, d2t;
+    private DateTime d1f, d1t, d2f, d2t, dLoanF, dLoanT;
     public ArrayList<ArrayAdapter<CharSequence>> adapter_array;
     public ArrayList<RadioButton> rbn_list;
     public ArrayList<CheckBox> cbx_list;
@@ -163,6 +163,10 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         btn_updateEntry = findViewById(R.id.btn_updateEntry);
         edt_editRow = findViewById(R.id.edt_editRowId);
         edt_search = findViewById(R.id.edt_search);
+        btn_loan_from = findViewById(R.id.btn_date_abo_from);
+        btn_loan_to = findViewById(R.id.btn_date_abo_to);
+        edt_loan_amt = findViewById(R.id.edt_amount_abo);
+        edt_loan_desc = findViewById(R.id.edt_desc_abo);
         //endregion
         //region stats
         rll_stats = findViewById(R.id.rll_stats);
@@ -289,6 +293,22 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
             @Override
             public void onClick(View view) {
                 datePickerMode = 4;
+                showDatePickerDialog();
+            }
+        });
+
+        btn_loan_from.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                datePickerMode = 1;
+                showDatePickerDialog();
+            }
+        });
+
+        btn_loan_to.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                datePickerMode = 2;
                 showDatePickerDialog();
             }
         });
@@ -486,41 +506,35 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     }
 
     public void goBack(){
-        // hier wird auf eine Einstellungsseite zurückgegeangen
-        if (app_state == FLOMB_STATSHOW || app_state == FLOMB_QUERYSHOW || app_state == FLOMB_UPDATE){
-            rll_stats.setVisibility(View.INVISIBLE);
-            btn_back.setVisibility(View.VISIBLE);
-            if (app_state == FLOMB_STATSHOW){
-                rll_statssets.setVisibility(View.VISIBLE);
-                txv_headline.setText(getResources().getString(R.string.statistics));
+        switch (app_state){
+            case FLOMB_STATSHOW:
                 app_state = FLOMB_STATSETS;
-            }
-            else {
+                rll_stats.setVisibility(View.INVISIBLE);
+                btn_back.setVisibility(View.VISIBLE);
+                break;
+            case FLOMB_UPDATE:
+                rll_add.setVisibility(View.INVISIBLE);
+            case FLOMB_LOAN:
+                rll_abo_loan.setVisibility(View.INVISIBLE);
+            case FLOMB_QUERYSHOW:
+                app_state = FLOMB_SETTINGS;
                 rll_settings.setVisibility(View.VISIBLE);
                 txv_headline.setText(R.string.settings);
+                break;
+            case FLOMB_ADD:
                 rll_add.setVisibility(View.INVISIBLE);
-                app_state = FLOMB_SETTINGS;
-            }
-        }
-        //alle der nächsten drei gehen mit "Back" auf die Startseite zurück
-        else {
-            if (app_state == FLOMB_ADD){
-                rll_add.setVisibility(View.INVISIBLE);
-                rll_start.setVisibility(View.VISIBLE);
                 keepData();
-            }
-            else if (app_state == FLOMB_STATSETS){
+            case FLOMB_STATSETS:
                 rll_statssets.setVisibility(View.INVISIBLE);
-                rll_start.setVisibility(View.VISIBLE);
-            }
-            else if (app_state == FLOMB_SETTINGS){
+            case FLOMB_SETTINGS:
                 rll_settings.setVisibility(View.INVISIBLE);
                 rll_start.setVisibility(View.VISIBLE);
-            }
-            txv_headline.setText(getString(R.string.app_name));
-            btn_back.setVisibility(View.INVISIBLE);
-            app_state = FLOMB_START;
-            updateFrontPage();
+                txv_headline.setText(getString(R.string.app_name));
+                btn_back.setVisibility(View.INVISIBLE);
+                app_state = FLOMB_START;
+                updateFrontPage();
+                break;
+            default: Log.wtf("APP_STATE_ERROR", "app_state set or queried wrongly!");
         }
     }
 
@@ -554,38 +568,59 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     //region Datepicker
     //TODO: go to only String and DateTime-Mode (no int gibberish anymore)
     public void setDefaultDatesOnPickers(){
-        SharedPreferences p = getSharedPreferences("USER_PREFERENCES_STATS", MODE_PRIVATE);
         Calendar c = Calendar.getInstance();
-        d1f = new DateTime(p.getInt("Y1F", c.get(Calendar.YEAR)), p.getInt("M1F", c.get(Calendar.MONTH)+1), p.getInt("D1F", c.get(Calendar.DAY_OF_MONTH)),13,0,0);
-        d1t = new DateTime(p.getInt("Y1T", c.get(Calendar.YEAR)), p.getInt("M1T", c.get(Calendar.MONTH)+1), p.getInt("D1T", c.get(Calendar.DAY_OF_MONTH)+1),13,0,0);
-        d2f = new DateTime(p.getInt("Y2F", c.get(Calendar.YEAR)), p.getInt("M2F", c.get(Calendar.MONTH)+1), p.getInt("D2F", c.get(Calendar.DAY_OF_MONTH)),13,0,0);
-        d2t = new DateTime(p.getInt("Y2T", c.get(Calendar.YEAR)), p.getInt("M2T", c.get(Calendar.MONTH)+1), p.getInt("D2T", c.get(Calendar.DAY_OF_MONTH)+1),13,0,0);
-        btn_date1from.setText(getString(R.string.from) + d_to_s(d1f, "de"));
-        btn_date1to.setText(getString(R.string.to) + d_to_s(d1t, "de"));
-        btn_date2from.setText(getString(R.string.from) + d_to_s(d2f, "de"));
-        btn_date2to.setText(getString(R.string.to) + d_to_s(d2t, "de"));
-        calcDateDiff(d1f,d1t,1);
-        calcDateDiff(d2f,d2t,2);
+        if (app_state == FLOMB_STATSETS) {
+            SharedPreferences p = getSharedPreferences("USER_PREFERENCES_STATS", MODE_PRIVATE);
+            d1f = new DateTime(p.getInt("Y1F", c.get(Calendar.YEAR)), p.getInt("M1F", c.get(Calendar.MONTH)+1), p.getInt("D1F", c.get(Calendar.DAY_OF_MONTH)),13,0,0);
+            d1t = new DateTime(p.getInt("Y1T", c.get(Calendar.YEAR)), p.getInt("M1T", c.get(Calendar.MONTH)+1), p.getInt("D1T", c.get(Calendar.DAY_OF_MONTH)+1),13,0,0);
+            d2f = new DateTime(p.getInt("Y2F", c.get(Calendar.YEAR)), p.getInt("M2F", c.get(Calendar.MONTH)+1), p.getInt("D2F", c.get(Calendar.DAY_OF_MONTH)),13,0,0);
+            d2t = new DateTime(p.getInt("Y2T", c.get(Calendar.YEAR)), p.getInt("M2T", c.get(Calendar.MONTH)+1), p.getInt("D2T", c.get(Calendar.DAY_OF_MONTH)+1),13,0,0);
+            btn_date1from.setText(getString(R.string.from) + d_to_s(d1f, "de"));
+            btn_date1to.setText(getString(R.string.to) + d_to_s(d1t, "de"));
+            btn_date2from.setText(getString(R.string.from) + d_to_s(d2f, "de"));
+            btn_date2to.setText(getString(R.string.to) + d_to_s(d2t, "de"));
+            calcDateDiff(d1f,d1t,1);
+            calcDateDiff(d2f,d2t,2);
+        }
+        else if (app_state == FLOMB_LOAN) {
+            //TODO choose proper dates
+            dLoanF = new DateTime(c.get(Calendar.YEAR), c.get(Calendar.MONTH)+1, c.get(Calendar.DAY_OF_MONTH), 13,0,0);
+            dLoanT = new DateTime(c.get(Calendar.YEAR), c.get(Calendar.MONTH)+1, c.get(Calendar.DAY_OF_MONTH), 13,0,0);
+            btn_loan_from.setText(d_to_s(dLoanF, "de"));
+            btn_loan_to.setText(d_to_s(dLoanT, "de"));
+        }
     }
 
     public void showDatePickerDialog(){
         int loc_y = dateYear;
         int loc_m = dateMonth;
         int loc_d = dateDay;
-        switch(datePickerMode){
-            case 0: break;
-            case 1: loc_y = d1f.getYear(); loc_m = d1f.getMonthOfYear(); loc_d = d1f.getDayOfMonth(); break;
-            case 2:
-                if (d1t.isAfter(d1f)) {loc_y = d1t.getYear(); loc_m = d1t.getMonthOfYear(); loc_d = d1t.getDayOfMonth();}
-                else {loc_y = d1f.getYear(); loc_m = d1f.getMonthOfYear(); loc_d = d1f.getDayOfMonth()+1;}
-                break;
-            case 3: loc_y = d2f.getYear(); loc_m = d2f.getMonthOfYear(); loc_d = d2f.getDayOfMonth(); break;
-            case 4:
-                if (d1t.isAfter(d1f)) {loc_y = d2t.getYear(); loc_m = d2t.getMonthOfYear(); loc_d = d2t.getDayOfMonth();}
-                else {loc_y = d2f.getYear(); loc_m = d2f.getMonthOfYear(); loc_d = d2f.getDayOfMonth()+1;}
-                break;
-            default:
+        if (app_state == FLOMB_STATSETS){
+            switch(datePickerMode){
+                case 0: break;
+                case 1: loc_y = d1f.getYear(); loc_m = d1f.getMonthOfYear(); loc_d = d1f.getDayOfMonth(); break;
+                case 2:
+                    if (d1t.isAfter(d1f)) {loc_y = d1t.getYear(); loc_m = d1t.getMonthOfYear(); loc_d = d1t.getDayOfMonth();}
+                    else {loc_y = d1f.getYear(); loc_m = d1f.getMonthOfYear(); loc_d = d1f.getDayOfMonth()+1;}
+                    break;
+                case 3: loc_y = d2f.getYear(); loc_m = d2f.getMonthOfYear(); loc_d = d2f.getDayOfMonth(); break;
+                case 4:
+                    if (d1t.isAfter(d1f)) {loc_y = d2t.getYear(); loc_m = d2t.getMonthOfYear(); loc_d = d2t.getDayOfMonth();}
+                    else {loc_y = d2f.getYear(); loc_m = d2f.getMonthOfYear(); loc_d = d2f.getDayOfMonth()+1;}
+                    break;
+                default:
+            }
         }
+        else if (app_state == FLOMB_LOAN) {
+            switch (datePickerMode){
+                case 1: loc_y = dLoanF.getYear(); loc_m = dLoanF.getMonthOfYear(); loc_d = dLoanF.getDayOfMonth(); break;
+                case 2:
+                    if (dLoanT.isAfter(dLoanF)) {loc_y = dLoanT.getYear(); loc_m = dLoanT.getMonthOfYear(); loc_d = dLoanT.getDayOfMonth();}
+                    else {loc_y = dLoanF.getYear(); loc_m = dLoanF.getMonthOfYear(); loc_d = dLoanF.getDayOfMonth()+1;}
+                    break;
+            }
+        }
+
         DatePickerDialog datePickerDialog = new DatePickerDialog(this,this, loc_y, loc_m-1, loc_d);
         Toast.makeText(getApplicationContext(), getString(R.string.choose_date), Toast.LENGTH_SHORT).show();
         datePickerDialog.show();
@@ -594,16 +629,19 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     @Override
     public void onDateSet(DatePicker arg0, int arg1, int arg2, int arg3) {
         // arg1 = year, arg2 = month, arg3 = day
-        if (datePickerMode == 0) {
-            showDateAddMode(arg1, arg2 + 1, arg3);
-            //Ort wird fokussiert
-            edt_place.requestFocus();
-            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-            imm.showSoftInput(edt_place, InputMethodManager.SHOW_IMPLICIT);
-            edt_place.setSelection(edt_place.getText().length());
-            updateInformation();
+
+        if (app_state == FLOMB_ADD){
+            if (datePickerMode == 0) {
+                showDateAddMode(arg1, arg2 + 1, arg3);
+                //Ort wird fokussiert
+                edt_place.requestFocus();
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.showSoftInput(edt_place, InputMethodManager.SHOW_IMPLICIT);
+                edt_place.setSelection(edt_place.getText().length());
+                updateInformation();
+            }
         }
-        else {
+        else if (app_state == FLOMB_STATSETS) {
             SharedPreferences.Editor e = getSharedPreferences("USER_PREFERENCES_STATS", MODE_PRIVATE).edit();
             switch (datePickerMode){
                 case 1: d1f = new DateTime(arg1, arg2+1, arg3, 13, 0,0);
@@ -629,6 +667,17 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
             }
             e.apply();
         }
+        else if (app_state == FLOMB_LOAN){
+            if (datePickerMode == 1) {
+                dLoanF = new DateTime(arg1, arg2 + 1, arg3, 13, 0, 0);
+                btn_loan_from.setText(d_to_s(dLoanF, "de"));
+            }
+            else {
+                dLoanT = new DateTime(arg1, arg2 + 1, arg3, 13, 0, 0);
+                btn_loan_to.setText(d_to_s(dLoanT, "de"));
+            }
+        }
+
     }
 
     //set Button text and sets variables for adding
@@ -912,7 +961,12 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     //region Settings + children
     public void resetEntry(){
         int deletedRows;
-        if (edt_editRow.getText().toString().equals("-1")) {
+        String info = edt_editRow.getText().toString();
+        if (info.equals("")){
+            Toast.makeText(MainActivity.this, R.string.choose_id, Toast.LENGTH_LONG).show();
+            return;
+        }
+        else if (info.equals("-1")) {
             deletedRows = myDB.deleteLastEntry();
         }
         else deletedRows = myDB.deleteData(edt_editRow.getText().toString());
@@ -945,7 +999,13 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     public void onUpdateClick(View view) {
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-        id = Integer.parseInt(edt_editRow.getText().toString());
+
+        String info = edt_editRow.getText().toString();
+        if (info.equals("")) {
+            Toast.makeText(MainActivity.this, R.string.choose_id, Toast.LENGTH_LONG).show();
+            return;
+        }
+        id = Integer.parseInt(info);
         boolean last = (id == -1);
         Cursor res = myDB.searchForUpdateEntry(id, last);
         edt_editRow.setText("");
@@ -1045,13 +1105,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         rll_abo_loan.setVisibility(View.VISIBLE);
         rll_settings.setVisibility(View.INVISIBLE);
         app_state = FLOMB_LOAN;
-        int dec = myDB.mapLoanToWorkingHours("2019-10-01", "2019-11-01", 42000, "hiofa");
-        if (dec == 0)
-            Toast.makeText(MainActivity.this, "Wage mapped to given dates!", Toast.LENGTH_LONG).show();
-        else if (dec == 1)
-            Toast.makeText(MainActivity.this, "No entries found to map!", Toast.LENGTH_LONG).show();
-        else
-            Toast.makeText(MainActivity.this, "Problem with mapping the given data!", Toast.LENGTH_LONG).show();
+        setDefaultDatesOnPickers();
     }
 
     public void onCreateAboClick(View view) {
@@ -1069,6 +1123,19 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
             Toast.makeText(MainActivity.this, myDB.exportDatabase("flomb.db"), Toast.LENGTH_LONG).show();
         }
         */
+    }
+
+    public void mapLoan(View view) {
+        String purpose = edt_loan_desc.getText().toString();
+        int sum = Integer.parseInt(edt_loan_amt.getText().toString());
+        int dec = myDB.mapLoanToWorkingHours(d_to_s(dLoanF, "en"), d_to_s(dLoanT, "en"), sum, purpose);
+        if (dec == 0)
+            Toast.makeText(MainActivity.this, "Wage mapped to given dates!", Toast.LENGTH_LONG).show();
+        else if (dec == 1)
+            Toast.makeText(MainActivity.this, "No entries found to map!", Toast.LENGTH_LONG).show();
+        else
+            Toast.makeText(MainActivity.this, "Problem with mapping the given data!", Toast.LENGTH_LONG).show();
+
     }
     //endregion settings + children
 }
