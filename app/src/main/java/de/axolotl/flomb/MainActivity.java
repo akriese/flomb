@@ -1129,13 +1129,17 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         String purpose = edt_loan_desc.getText().toString();
         int sum = Integer.parseInt(edt_loan_amt.getText().toString());
         int dec = myDB.mapLoanToWorkingHours(d_to_s(dLoanF, "en"), d_to_s(dLoanT, "en"), sum, purpose);
-        if (dec == 0)
+        if (dec == 0){
             Toast.makeText(MainActivity.this, "Wage mapped to given dates!", Toast.LENGTH_LONG).show();
+            edt_loan_amt.setText("0");
+        }
         else if (dec == 1)
             Toast.makeText(MainActivity.this, "No entries found to map!", Toast.LENGTH_LONG).show();
         else
             Toast.makeText(MainActivity.this, "Problem with mapping the given data!", Toast.LENGTH_LONG).show();
 
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
     //endregion settings + children
 }

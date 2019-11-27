@@ -57,7 +57,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    public boolean insertData(int amount, String category, String subcategory, String description, int dateYear, int dateMonth, int dateDay, String place){
+    public boolean insertData(int amount, String category, String subcategory, String description,
+                              int dateYear, int dateMonth, int dateDay, String place){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(COL_1,amount);
@@ -74,7 +75,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return !(result==-1);
     }
 
-    public boolean updateData(int id, int amount, String category, String subcategory, String description, int dateYear, int dateMonth, int dateDay, String place){
+    public boolean updateData(int id, int amount, String category, String subcategory,
+                              String description, int dateYear, int dateMonth, int dateDay, String place){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(COL_1,amount);
@@ -135,7 +137,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String selectionDate = COL_9+" BETWEEN '"+fr_str+"' AND '"+to_str+"'";
         Log.wtf("SUM",cat);
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery("SELECT "+COL_2+ ", SUM("+ COL_1 +") FROM "+TABLE_NAME+" WHERE "+selectionDate+" AND "+COL_2+" IN ("+cat+") GROUP BY "+COL_2,null);
+        return db.rawQuery("SELECT "+COL_2+ ", SUM("+ COL_1 +") FROM "+TABLE_NAME+" WHERE "+
+                selectionDate+" AND "+COL_2+" IN ("+cat+") GROUP BY "+COL_2,null);
     }
 
     public Cursor searchForUpdateEntry(int id, boolean last){
@@ -148,7 +151,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public Cursor searchQuery(String s){
         SQLiteDatabase db = this.getWritableDatabase();
-        return db.rawQuery("SELECT "+ COL_1 + ","+ COL_4 + ","+ COL_9 + ","+ COL_8 +" FROM "+ TABLE_NAME + " WHERE " + COL_4 + " LIKE '%" + s + "%'", null);
+        return db.rawQuery("SELECT "+ COL_1 + ","+ COL_4 + ","+ COL_9 + ","+ COL_8 +" FROM "+
+                TABLE_NAME + " WHERE " + COL_4 + " LIKE '%" + s + "%'", null);
     }
 
     public Cursor doQuery(String q){
@@ -169,15 +173,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public int mapLoanToWorkingHours(String fr_str, String to_str, int sum, String purpose){
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor res = db.rawQuery("SELECT SUM("+COL_1+") FROM "+TABLE_NAME+" WHERE "+
-                COL_4+" = '"+purpose+"' AND "+COL_9+" BETWEEN '"+fr_str+"' AND '"+to_str+"' AND "+COL_3+" = 'Wage'", null);
+                COL_4+" LIKE '%"+purpose+"%' AND "+COL_9+" BETWEEN '"+fr_str+"' AND '"+to_str+"' AND "+COL_3+" = 'Wage'", null);
         res.moveToFirst();
         int hours = res.getInt(0);
         res.close();
         if (hours == 0)
             return 1;
         double perHour = sum / (double) hours;
-        db.execSQL("UPDATE " + TABLE_NAME + " SET "+COL_4+" = "+COL_4+"|| ' ' || ' ' || + AMOUNT, AMOUNT = AMOUNT * "+perHour*-1+" WHERE "+
-                COL_4+" = '"+purpose+"' AND "+COL_9+" BETWEEN '"+fr_str+"' AND '"+to_str+"' AND "+COL_3+" = 'Wage'");
+        db.execSQL("UPDATE " + TABLE_NAME + " SET "+COL_4+" = '"+purpose+"'|| ': ' || "+COL_1+", " +
+                COL_1+" = cast(("+COL_1+" * "+perHour+") as int) WHERE "+COL_4+" LIKE '%"+purpose+"%' " +
+                "AND "+COL_9+" BETWEEN '"+fr_str+"' AND '"+to_str+"' AND "+COL_3+" = 'Wage'");
         return 0;
     }
 
