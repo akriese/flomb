@@ -186,6 +186,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return 0;
     }
 
+    //TODO undoMapLoan
+    public int undoMapLoan(String fr_str, String to_str, String purpose){
+        SQLiteDatabase db = this.getWritableDatabase();
+        int length = purpose.length()+3; // Länge + ": " + 1, da Substring bei 1 anfängt, nicht bei 0
+        db.execSQL("UPDATE " + TABLE_NAME + " SET "+COL_4+" = '"+purpose+"', " +
+                COL_1+" = cast(SUBSTR("+COL_4+","+length+") as int) WHERE "+COL_4+" LIKE '%"+purpose+"%' " +
+                "AND "+COL_9+" BETWEEN '"+fr_str+"' AND '"+to_str+"' AND "+COL_3+" = 'Wage'");
+        return 0;
+    }
+
     public Integer deleteLastEntry(){
         SQLiteDatabase db = this.getWritableDatabase();
         return db.delete(TABLE_NAME, "ID = (SELECT MAX(ID) FROM " + TABLE_NAME + ")", null);

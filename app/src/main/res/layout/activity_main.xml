@@ -545,15 +545,29 @@
                 android:hint="@string/amount"/>
         </LinearLayout>
 
-        <Button
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:text="@string/mapping"
-            android:id="@+id/btn_submit_abo_loan"
-            android:onClick="mapLoan"
             android:layout_below="@id/lnl_edt_abo"
-            android:layout_marginTop="20dp"/>
+            android:layout_marginTop="20dp"
+            android:layout_centerHorizontal="true"
+            android:gravity="center_horizontal">
+
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/cbx_unmapLoan"
+                android:text="@string/unmapLoan"/>
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/mapping"
+                android:id="@+id/btn_submit_abo_loan"
+                android:onClick="mapLoan" />
+
+        </LinearLayout>
+
 
     </RelativeLayout>
 

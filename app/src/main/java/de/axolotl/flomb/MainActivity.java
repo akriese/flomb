@@ -71,7 +71,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     public EditText edt_place, edt_description, edt_amount, edt_editRow, edt_search, edt_loan_desc, edt_loan_amt;
     public TextView txv_headline, txv_addsumup, txv_sumup11, txv_statssetsumup, txv_statsdisplay;
     public RadioButton rbn_f, rbn_l, rbn_o, rbn_m, rbn_b, rbn_single, rbn_compare, rbn_change;
-    public CheckBox cbx_keepdata, cbx_minus, cbx_f, cbx_l, cbx_m, cbx_o, cbx_b;
+    public CheckBox cbx_keepdata, cbx_minus, cbx_f, cbx_l, cbx_m, cbx_o, cbx_b, cbx_unmapLoan;
     public LinearLayout lnl_description, lnl_dateplace, lnl_cbxfateb, lnl_editRow, lnl_date1, lnl_date2;
     public RelativeLayout rll_add, rll_start, rll_statssets, rll_settings, rll_stats, rll_abo_loan;
     public ScrollView scv_sumup1;
@@ -101,6 +101,9 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     DatabaseHelperBackup myDBBackup;
     private static final int FLOMB_START=0, FLOMB_ADD=1, FLOMB_SETTINGS=2, FLOMB_STATSETS=3, FLOMB_STATSHOW=4, FLOMB_LOAN=5,
             FLOMB_QUERYSHOW=6, FLOMB_UPDATE=7;
+    enum APP_STATE {
+        FLOMB_START, FLOMB_ADD, FLOMB_SETTINGS, FLOMB_STATSETS, FLOMB_STATSHOW, FLOMB_LOAN, FLOMB_QUERYSHOW, FLOMB_UPDATE;
+    }
 
     //endregion
 
@@ -176,6 +179,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         //endregion
         //region abo / loan
         rll_abo_loan = findViewById(R.id.rll_abo_loanmapping);
+        cbx_unmapLoan = findViewById(R.id.cbx_unmapLoan);
         //endregion
         //endregion
 
@@ -519,6 +523,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
             case FLOMB_QUERYSHOW:
                 app_state = FLOMB_SETTINGS;
                 rll_settings.setVisibility(View.VISIBLE);
+                rll_stats.setVisibility(View.INVISIBLE);
                 txv_headline.setText(R.string.settings);
                 break;
             case FLOMB_ADD:
@@ -1127,8 +1132,17 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
     public void mapLoan(View view) {
         String purpose = edt_loan_desc.getText().toString();
-        int sum = Integer.parseInt(edt_loan_amt.getText().toString());
-        int dec = myDB.mapLoanToWorkingHours(d_to_s(dLoanF, "en"), d_to_s(dLoanT, "en"), sum, purpose);
+        int dec;
+        if (!(cbx_unmapLoan.isChecked())) { //Map Loan
+            if (edt_loan_amt.getText().toString().equals(""))
+                dec = -1;
+            else {
+                int sum = Integer.parseInt(edt_loan_amt.getText().toString());
+                dec = myDB.mapLoanToWorkingHours(d_to_s(dLoanF, "en"), d_to_s(dLoanT, "en"), sum, purpose);
+            }
+        }
+        else // Unmap Loan
+            dec = myDB.undoMapLoan(d_to_s(dLoanF, "en"), d_to_s(dLoanT, "en"), purpose);
         if (dec == 0){
             Toast.makeText(MainActivity.this, "Wage mapped to given dates!", Toast.LENGTH_LONG).show();
             edt_loan_amt.setText("0");
