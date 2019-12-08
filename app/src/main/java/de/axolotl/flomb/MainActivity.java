@@ -328,52 +328,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
             txv_sumup11.setText("No Data available!");
             return;
         }
-        StringBuilder builder = new StringBuilder();
-
-        while (res.moveToNext()){
-            String kurz, kurzOrt;
-            String s = res.getString(2);
-            kurz = categories_short.get(categories.indexOf(s));
-
-            switch (res.getString(8)){
-                case "Berlin": kurzOrt = "B."; break;
-                case "Jena": kurzOrt = "J."; break;
-                case "unterwegs": kurzOrt = "un."; break;
-                default: kurzOrt = res.getString(8); break;
-            }
-
-            builder.append(c_to_e(res.getInt(1)) +getString(R.string.für) + res.getString(4)
-                    +" ("+kurz+", "+ res.getString(3)+")" + getString(R.string.am) + res.getString(9)+" ("+res.getInt(0)+")" + getString(R.string.in) +kurzOrt+"\n");
-        }
-
-
-        builder.insert(0, "\n");
-
-        //ermittle #Tage des letzten Monats
-        String d1,d2;
-        res.moveToFirst();
-        d2 = res.getString(9);
-        res.moveToLast();
-        d1 = res.getString(9);
-        Cursor r2 = myDB.getDaysBetween(d1,d2);
-        r2.moveToFirst();
-        double between = (double) r2.getInt(0) + 1;
-        Log.wtf("BETWEEN", ""+between);
-
-        res = myDB.getSummaryOfPastMonth();
-        overall_all = overall_withoutBig = 0;
-        while (res.moveToNext()){
-            int amnt = res.getInt(1);
-            String cat = res.getString(0);
-            overall_all += amnt; overall_withoutBig += amnt;
-            if (cat.equals("Big"))
-                overall_withoutBig -= amnt;
-            builder.insert(0, cat + ": " + c_to_e(amnt) +" ("+c_to_e(amnt/between)+" pro Tag)\n");
-        }
-
-        builder.insert(0,"Without Big: "+c_to_e(overall_withoutBig)+" ("+c_to_e(overall_withoutBig/between)+" pro Tag)\n\n");
-        builder.insert(0,"ALL: "+ c_to_e(overall_all) +" ("+c_to_e(overall_all/between)+" pro Tag)\n");
-
+        StringBuilder builder = buildQueriedData(res);
 
         txv_sumup11.setText(builder.toString());
 
@@ -864,7 +819,6 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         }
         StringBuilder builderDetails = new StringBuilder();
         StringBuilder builderStats = new StringBuilder();
-        StringBuilder builderStats2 = new StringBuilder();
         ArrayList<ArrayList<String>> content = new ArrayList<>();
         Cursor r = myDB.getQueryData(chosen_cats, d_to_s(d1f, "en"), d_to_s(d1t, "en"));
         if (r.getCount() == 0) return;
@@ -911,6 +865,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         }
     }
 
+    //string to date
     public DateTime s_to_d(String date, String form){
         DateTime r;
         String[] arr;
@@ -926,6 +881,58 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         }
         return r;
     }
+
+    //getQueriedData
+    public StringBuilder buildQueriedData(Cursor c){
+        StringBuilder res = new StringBuilder();
+        c.moveToPosition(-1);
+
+        while (c.moveToNext()){
+            String kurz, kurzOrt;
+            String s = c.getString(2);
+            kurz = categories_short.get(categories.indexOf(s));
+
+            switch (c.getString(8)){
+                case "Berlin": kurzOrt = "B."; break;
+                case "Jena": kurzOrt = "J."; break;
+                case "unterwegs": kurzOrt = "un."; break;
+                default: kurzOrt = c.getString(8); break;
+            }
+
+            res.append(c_to_e(c.getInt(1)) +getString(R.string.für) + c.getString(4)
+                    +" ("+kurz+", "+ c.getString(3)+")" + getString(R.string.am) + c.getString(9)+" ("+c.getInt(0)+")" + getString(R.string.in) +kurzOrt+"\n");
+        }
+
+        res.insert(0, "\n");
+
+        //ermittle #Tage des letzten Monats
+        String d1,d2;
+        c.moveToFirst();
+        d2 = c.getString(9);
+        c.moveToLast();
+        d1 = c.getString(9);
+        Cursor r2 = myDB.getDaysBetween(d1,d2);
+        r2.moveToFirst();
+        double between = (double) r2.getInt(0) + 1;
+        Log.wtf("BETWEEN", ""+between);
+
+        c = myDB.getSummaryOfPastMonth();
+        overall_all = overall_withoutBig = 0;
+        while (c.moveToNext()){
+            int amnt = c.getInt(1);
+            String cat = c.getString(0);
+            overall_all += amnt; overall_withoutBig += amnt;
+            if (cat.equals("Big"))
+                overall_withoutBig -= amnt;
+            res.insert(0, cat + ": " + c_to_e(amnt) +" ("+c_to_e(amnt/between)+" pro Tag)\n");
+        }
+
+        res.insert(0,"Without Big: "+c_to_e(overall_withoutBig)+" ("+c_to_e(overall_withoutBig/between)+" pro Tag)\n\n");
+        res.insert(0,"ALL: "+ c_to_e(overall_all) +" ("+c_to_e(overall_all/between)+" pro Tag)\n");
+
+        return res;
+    }
+
 
     //cents to euros
     public String c_to_e(double cents){
@@ -1156,4 +1163,14 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
     //endregion settings + children
+
+    //TODO remove cbx_minus
+    //TODO abo-func
+    //TODO copy-func
+    //TODO txv: link to update-window --> faster updates
+    //TODO use same func for stats, search and front page
+    //TODO remember/recommendation func for edt_description (AI style?)
+    //TODO colored lines
+    //TODO dont keep info on update
+    //TODO output layout to (SUB, CAT, ID)
 }
