@@ -1173,4 +1173,5 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     //TODO colored lines
     //TODO dont keep info on update
     //TODO output layout to (SUB, CAT, ID)
+    //TODO -1 checking function (returning last index of db)
 }
