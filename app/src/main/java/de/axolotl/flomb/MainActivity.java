@@ -71,7 +71,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     public EditText edt_place, edt_description, edt_amount, edt_editRow, edt_search, edt_loan_desc, edt_loan_amt;
     public TextView txv_headline, txv_addsumup, txv_sumup11, txv_statssetsumup, txv_statsdisplay;
     public RadioButton rbn_f, rbn_l, rbn_o, rbn_m, rbn_b, rbn_single, rbn_compare, rbn_change;
-    public CheckBox cbx_keepdata, cbx_minus, cbx_f, cbx_l, cbx_m, cbx_o, cbx_b, cbx_unmapLoan;
+    public CheckBox cbx_keepdata, cbx_f, cbx_l, cbx_m, cbx_o, cbx_b, cbx_unmapLoan;
     public LinearLayout lnl_description, lnl_dateplace, lnl_cbxfateb, lnl_editRow, lnl_date1, lnl_date2;
     public RelativeLayout rll_add, rll_start, rll_statssets, rll_settings, rll_stats, rll_abo_loan;
     public ScrollView scv_sumup1;
@@ -137,7 +137,6 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         rbn_m = findViewById(R.id.rbn_m);
         rbn_b = findViewById(R.id.rbn_b);
         cbx_keepdata = findViewById(R.id.cbx_keepdata);
-        cbx_minus = findViewById(R.id.cbx_minus);
         lnl_description = findViewById(R.id.lnl_description);
         lnl_dateplace = findViewById(R.id.lnl_dateplace);
         rll_add = findViewById(R.id.rll_add);
@@ -341,7 +340,6 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         rll_add.setVisibility(View.VISIBLE);
         rll_start.setVisibility(View.INVISIBLE);
         btn_back.setVisibility(View.VISIBLE);
-        cbx_minus.setChecked(false);
         //region EditText Listener
         edt_amount.addTextChangedListener(new TextWatcher() {
             @Override
@@ -351,13 +349,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (edt_amount.getText().toString().startsWith("0") && edt_amount.getText().toString().length()!=1){
-                    edt_amount.setText(edt_amount.getText().toString().substring(1));
-                    edt_amount.setSelection(edt_amount.getText().length());
-                }
-                if (edt_amount.getText().length()!=0){
-                    updateInformation();
-                }
+                updateInformation();
             }
 
             @Override
@@ -437,7 +429,8 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         dateYear = prefGetter.getInt("YEAR", Calendar.getInstance().get(Calendar.YEAR));
         dateMonth = prefGetter.getInt("MONTH", Calendar.getInstance().get(Calendar.MONTH));
         dateDay = prefGetter.getInt("DAY", Calendar.getInstance().get(Calendar.DAY_OF_MONTH));
-        cbx_minus.setChecked(prefGetter.getBoolean("MINUS", false));
+        amount = prefGetter.getInt("AMOUNT", 0);
+        edt_amount.setText(Integer.toString(amount));
     }
 
     public void onStatssetsClick(View view) { //navigates from Main Menu to Statistic's Settings Menu
@@ -732,11 +725,10 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     }
 
     public void updateInformation(){
-        if (edt_amount.getText().length()==0){
-            edt_amount.setText("0");
-        }
-        amount = Integer.parseInt(edt_amount.getText().toString());
-        if (cbx_minus.isChecked()) amount=amount*(-1);
+        String t = edt_amount.getText().toString();
+        if (t.length() == 0) edt_amount.setText("0");
+        else if (!(t.charAt(0) == '-' && t.length() == 1))
+            amount = Integer.parseInt(edt_amount.getText().toString());
         description = edt_description.getText().toString();
         place = edt_place.getText().toString();
 
@@ -751,24 +743,24 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
             editor.putInt("RBN", getIndexOfCheckedRbn(rbn_list));
             editor.putInt("SUB", spi_description.getSelectedItemPosition());
             //eingegebenes Datum
-            editor.putInt("YEAR",dateYear);
-            editor.putInt("MONTH",dateMonth);
-            editor.putInt("DAY",dateDay);
-            editor.putBoolean("MINUS", cbx_minus.isChecked());
+            editor.putInt("YEAR", dateYear);
+            editor.putInt("MONTH", dateMonth);
+            editor.putInt("DAY", dateDay);
+            editor.putInt("AMOUNT", amount);
         }
         else {
             editor.putString("PLACE","");
-            editor.putInt("RBN",0);
-            editor.putInt("SUB",0);
+            editor.putInt("RBN", 0);
+            editor.putInt("SUB", 0);
+            editor.putInt("AMOUNT", 0);
             //heutiges Datum
-            editor.putInt("YEAR",nowYear);
-            editor.putInt("MONTH",nowMonth);
-            editor.putInt("DAY",nowDay);
+            editor.putInt("YEAR", nowYear);
+            editor.putInt("MONTH", nowMonth);
+            editor.putInt("DAY", nowDay);
 
             edt_description.setText("");
             edt_place.setText("");
             btn_datepicker.setText(getString(R.string.date));
-            cbx_minus.setChecked(false);
         }
         editor.apply();
         updateFrontPage();
@@ -1074,9 +1066,8 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         edt_description.setText(description);
         edt_place.setText(place);
         amount = res.getInt(1);
-        //set cbx_minus
-        cbx_minus.setChecked(amount<0);
-        edt_amount.setText(Integer.toString(Math.abs(amount)));
+
+        edt_amount.setText(amount);
 
         updateInformation();
     }
@@ -1196,7 +1187,6 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     //endregion settings + children
 
     //region TO-DO area
-    //TODO 1    remove cbx_minus
     //TODO 7    abo-func
     //TODO 8    txv: link to update-window --> faster updates
     //TODO 2    use same func for stats, search and front page

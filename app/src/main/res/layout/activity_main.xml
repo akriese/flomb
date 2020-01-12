@@ -123,14 +123,6 @@
                 android:layout_weight="0.7"
                 android:inputType="text"/>
 
-            <CheckBox
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/cbx_minus"
-                android:text="-"
-                android:layout_weight="0.1"
-                android:onClick="cbxMinusClick"/>
-
         </LinearLayout>
 
         <EditText
@@ -139,7 +131,7 @@
             android:hint="@string/amount"
             android:id="@+id/edt_amount"
             android:layout_below="@id/lnl_dateplace"
-            android:inputType="number"
+            android:inputType="numberDecimal|numberSigned"
             android:layout_marginTop="15dp"
             android:layout_centerHorizontal="true"/>
 
@@ -548,7 +540,7 @@
                 android:layout_height="match_parent"
                 android:id="@+id/edt_amount_abo"
                 android:layout_weight="1.0"
-                android:inputType="numberSigned"
+                android:inputType="numberDecimal|numberSigned"
                 android:hint="@string/amount"/>
         </LinearLayout>
 
