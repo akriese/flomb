@@ -101,6 +101,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     DatabaseHelperBackup myDBBackup;
     private static final int FLOMB_START=0, FLOMB_ADD=1, FLOMB_SETTINGS=2, FLOMB_STATSETS=3, FLOMB_STATSHOW=4, FLOMB_LOAN=5,
             FLOMB_QUERYSHOW=6, FLOMB_UPDATE=7;
+
     enum APP_STATE {
         FLOMB_START, FLOMB_ADD, FLOMB_SETTINGS, FLOMB_STATSETS, FLOMB_STATSHOW, FLOMB_LOAN, FLOMB_QUERYSHOW, FLOMB_UPDATE;
     }
@@ -325,7 +326,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     public void updateFrontPage(){ //getAllData
         Cursor res = myDB.getPastMonth();
         if (res.getCount() == 0){
-            txv_sumup11.setText("No Data available!");
+            txv_sumup11.setText(R.string.no_data_in_month);
             return;
         }
         StringBuilder builder = buildQueriedData(res);
@@ -526,7 +527,6 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     //endregion
 
     //region Datepicker
-    //TODO: go to only String and DateTime-Mode (no int gibberish anymore)
     public void setDefaultDatesOnPickers(){
         Calendar c = Calendar.getInstance();
         if (app_state == FLOMB_STATSETS) {
@@ -590,7 +590,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     public void onDateSet(DatePicker arg0, int arg1, int arg2, int arg3) {
         // arg1 = year, arg2 = month, arg3 = day
 
-        if (app_state == FLOMB_ADD){
+        if (app_state == FLOMB_ADD || app_state == FLOMB_UPDATE){
             if (datePickerMode == 0) {
                 showDateAddMode(arg1, arg2 + 1, arg3);
                 //Ort wird fokussiert
@@ -700,8 +700,8 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     public void addOrUpdate(){
         updateInformation();
         if (checkAddData())
-            if (!update_dialog) insertToDB();
-            else updateDB();
+            if (app_state == FLOMB_ADD) insertToDB();
+            else if (app_state == FLOMB_UPDATE) updateDB();
         else Toast.makeText(MainActivity.this,getString(R.string.missing_data),Toast.LENGTH_LONG).show();
     }
 
@@ -715,10 +715,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
     public void insertToDB () {
         boolean isInserted = myDB.insertData(amount, category, subcategory, description, dateYear, dateMonth, dateDay, place);
-        Log.wtf("INSERT TEST", ""+dateYear+","+dateMonth+","+dateDay);
-        if (isInserted){
-            Toast.makeText(MainActivity.this,getString(R.string.entry_added),Toast.LENGTH_LONG).show();
-        }
+        if (isInserted) Toast.makeText(MainActivity.this,getString(R.string.entry_added),Toast.LENGTH_LONG).show();
         else Toast.makeText(MainActivity.this,getString(R.string.entry_not_added),Toast.LENGTH_LONG).show();
         keepData();
     }
@@ -971,20 +968,17 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     //endregion
 
     //region Settings + children
-    public void resetEntry(){
-        int deletedRows;
-        String info = edt_editRow.getText().toString();
-        if (info.equals("")){
-            Toast.makeText(MainActivity.this, R.string.choose_id, Toast.LENGTH_LONG).show();
+    public void resetEntry() {
+        int deletedRows, id = getChosenID(0);
+        if (id == -1) {
+            Toast.makeText(MainActivity.this, R.string.no_or_wrong_id, Toast.LENGTH_LONG).show();
             return;
         }
-        else if (info.equals("-1")) {
-            deletedRows = myDB.deleteLastEntry();
-        }
-        else deletedRows = myDB.deleteData(edt_editRow.getText().toString());
+        deletedRows = myDB.deleteData(id);
         if (deletedRows > 0){
             Toast.makeText(MainActivity.this,R.string.data_del, Toast.LENGTH_LONG).show();
-        } else {
+        }
+        else {
             Toast.makeText(MainActivity.this,R.string.data_n_del, Toast.LENGTH_LONG).show();
         }
     }
@@ -1008,29 +1002,47 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         alert.show();
     }
 
-    public void onUpdateClick(View view) {
-        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+    public int getChosenID(int edt) {
+        int res = 0;
+        String info;
+        switch (edt){
+            case 0: {
+                info = edt_editRow.getText().toString();
+                if (info.equals("")) return -1;
+                res = Integer.parseInt(info);
+                if (res == -1) res = myDB.getLastEntryID();
+                else if (res < 0) return -1;
+            }
+        }
+        return res;
+    }
 
-        String info = edt_editRow.getText().toString();
-        if (info.equals("")) {
-            Toast.makeText(MainActivity.this, R.string.choose_id, Toast.LENGTH_LONG).show();
+    public void setupEntryPage(boolean copy) {
+        id = getChosenID(0);
+        if (id == -1) {
+            Toast.makeText(MainActivity.this, R.string.no_or_wrong_id, Toast.LENGTH_LONG).show();
             return;
         }
-        id = Integer.parseInt(info);
-        boolean last = (id == -1);
-        Cursor res = myDB.searchForUpdateEntry(id, last);
+
+        Cursor res = myDB.searchForUpdateEntry(id);
         edt_editRow.setText("");
         if (res.getCount() == 0){
-            Toast.makeText(MainActivity.this,getString(R.string.id_not_available),Toast.LENGTH_LONG).show();
+            Toast.makeText(MainActivity.this, getString(R.string.id_not_available),Toast.LENGTH_LONG).show();
             return;
         }
         update_dialog = true;
         rll_settings.setVisibility(View.INVISIBLE);
         goToAddLayout();
-        app_state = FLOMB_UPDATE;
-        txv_headline.setText(R.string.update_entry);
-        btn_addfinal.setText(R.string.update_entry);
+        if (copy) {
+            app_state = FLOMB_ADD;
+            txv_headline.setText(R.string.copy_entry);
+            btn_addfinal.setText(R.string.copy_entry);
+        }
+        else {
+            app_state = FLOMB_UPDATE;
+            txv_headline.setText(R.string.update_entry);
+            btn_addfinal.setText(R.string.update_entry);
+        }
 
         res.moveToNext();
 
@@ -1064,6 +1076,20 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         edt_amount.setText(Integer.toString(Math.abs(amount)));
 
         updateInformation();
+    }
+
+    public void onUpdateClick(View view) {
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+
+        setupEntryPage(false);
+    }
+
+    public void onCopyClick(View view) {
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+
+        setupEntryPage(true);
     }
 
     public StringBuilder rawQuery(String q, boolean raw){
@@ -1164,14 +1190,19 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     }
     //endregion settings + children
 
+    //region TODO area
+    //TODO -1 checking function (returning last index of db)
     //TODO remove cbx_minus
     //TODO abo-func
-    //TODO copy-func
     //TODO txv: link to update-window --> faster updates
     //TODO use same func for stats, search and front page
-    //TODO remember/recommendation func for edt_description (AI style?)
-    //TODO colored lines
+    //TODO remember/recommendation func for edt_description (AI style?), AutoCompleteTextView
+    //TODO colored lines (for better readabilty)
     //TODO dont keep info on update
     //TODO output layout to (SUB, CAT, ID)
-    //TODO -1 checking function (returning last index of db)
+    //TODO write one function for displaying, and use that for every part of the app
+    //TODO: go to only String and DateTime-Mode (no int gibberish anymore)
+    //TODO format output so that it's formed to columns
+
+    //endregion
 }

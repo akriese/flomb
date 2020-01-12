@@ -141,12 +141,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 selectionDate+" AND "+COL_2+" IN ("+cat+") GROUP BY "+COL_2,null);
     }
 
-    public Cursor searchForUpdateEntry(int id, boolean last){
+    public Cursor searchForUpdateEntry(int id){
         SQLiteDatabase db = this.getWritableDatabase();
-        if (!last)
-            return db.rawQuery("SELECT * FROM "+ TABLE_NAME + " WHERE ID = " + id, null);
-        else
-            return db.rawQuery("SELECT * FROM "+TABLE_NAME+" WHERE ID = (SELECT MAX(ID) FROM "+TABLE_NAME+")", null);
+        return db.rawQuery("SELECT * FROM "+ TABLE_NAME + " WHERE ID = " + id, null);
     }
 
     public Cursor searchQuery(String s){
@@ -165,9 +162,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("DELETE FROM "+TABLE_NAME);
     }
 
-    public Integer deleteData (String id){
+    public Integer deleteData (int id){
         SQLiteDatabase db = this.getWritableDatabase();
-        return db.delete(TABLE_NAME, "ID = ?", new String[] {id});
+        return db.delete(TABLE_NAME, "ID = " + id, null);
     }
 
     public int mapLoanToWorkingHours(String fr_str, String to_str, int sum, String purpose){
@@ -196,9 +193,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return 0;
     }
 
-    public Integer deleteLastEntry(){
-        SQLiteDatabase db = this.getWritableDatabase();
-        return db.delete(TABLE_NAME, "ID = (SELECT MAX(ID) FROM " + TABLE_NAME + ")", null);
+    public int getLastEntryID() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor r = db.rawQuery("SELECT MAX(ID) FROM "+TABLE_NAME, null);
+        r.moveToNext();
+        return r.getInt(0);
+    }
+
+    public Cursor getSuggestions(String cat, String subcat, int minimum){
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.rawQuery("SELECT "+COL_4+", count(*) FROM "+TABLE_NAME+" WHERE "+COL_2+" = "+cat+" AND "
+                +COL_3+" = "+subcat+" GROUP BY "+COL_4,null);
     }
 
     public String exportDatabase(String database) {

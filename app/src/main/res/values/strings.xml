@@ -22,8 +22,9 @@
     <string name="until">&#160;bis einschließlich dem&#160;</string>
     <string name="showed">&#160;angezeigt!\n</string>
     <string name="statistics">Stats</string>
-    <string name="update_entry">Update Entry</string>
-    <string name="delete_entry">Delete Entry</string>
+    <string name="update_entry">Update</string>
+    <string name="delete_entry">Delete</string>
+    <string name="copy_entry">Copy</string>
     <string name="data_del">Data deleted!</string>
     <string name="missing_data">Es fehlen Informationen! (nicht hinzugefügt)</string>
     <string name="settings">Einstellungen</string>
@@ -32,7 +33,7 @@
     <string name="bad_query">Ungültige Suchanfrage!</string>
     <string name="choose_category">Kategorie auswählen!</string>
     <string name="choose_date">Datum auswählen!</string>
-    <string name="choose_id">ID auswählen!</string>
+    <string name="no_or_wrong_id">Gültige ID auswählen!</string>
     <string name="description">Beschreibung</string>
     <string name="remember">Merken</string>
     <string name="place">Ort</string>
@@ -45,6 +46,7 @@
     <string name="mapping">Lohn eintragen</string>
     <string name="unmapLoan">Undo Map</string>
     <string name="backup_db">Backup DB</string>
+    <string name="no_data_in_month">No data in the past month!</string>
     <string name="exit_question">Wanna exit, biiiitch?</string>
     <string name="delete_question">Sicher, dass du den Eintrag löschen willst?</string>
 
