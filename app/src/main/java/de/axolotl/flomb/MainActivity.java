@@ -437,6 +437,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         dateYear = prefGetter.getInt("YEAR", Calendar.getInstance().get(Calendar.YEAR));
         dateMonth = prefGetter.getInt("MONTH", Calendar.getInstance().get(Calendar.MONTH));
         dateDay = prefGetter.getInt("DAY", Calendar.getInstance().get(Calendar.DAY_OF_MONTH));
+        cbx_minus.setChecked(prefGetter.getBoolean("MINUS", false));
     }
 
     public void onStatssetsClick(View view) { //navigates from Main Menu to Statistic's Settings Menu
@@ -474,6 +475,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
                 break;
             case FLOMB_UPDATE:
                 rll_add.setVisibility(View.INVISIBLE);
+                keepData();
             case FLOMB_LOAN:
                 rll_abo_loan.setVisibility(View.INVISIBLE);
             case FLOMB_QUERYSHOW:
@@ -752,6 +754,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
             editor.putInt("YEAR",dateYear);
             editor.putInt("MONTH",dateMonth);
             editor.putInt("DAY",dateDay);
+            editor.putBoolean("MINUS", cbx_minus.isChecked());
         }
         else {
             editor.putString("PLACE","");
@@ -1083,6 +1086,8 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
 
         setupEntryPage(false);
+
+        cbx_keepdata.setChecked(false);
     }
 
     public void onCopyClick(View view) {
@@ -1190,19 +1195,17 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     }
     //endregion settings + children
 
-    //region TODO area
-    //TODO -1 checking function (returning last index of db)
-    //TODO remove cbx_minus
-    //TODO abo-func
-    //TODO txv: link to update-window --> faster updates
-    //TODO use same func for stats, search and front page
-    //TODO remember/recommendation func for edt_description (AI style?), AutoCompleteTextView
-    //TODO colored lines (for better readabilty)
-    //TODO dont keep info on update
-    //TODO output layout to (SUB, CAT, ID)
-    //TODO write one function for displaying, and use that for every part of the app
-    //TODO: go to only String and DateTime-Mode (no int gibberish anymore)
-    //TODO format output so that it's formed to columns
+    //region TO-DO area
+    //TODO 1    remove cbx_minus
+    //TODO 7    abo-func
+    //TODO 8    txv: link to update-window --> faster updates
+    //TODO 2    use same func for stats, search and front page
+    //TODO 6    remember/recommendation func for edt_description (AI style?), AutoCompleteTextView
+    //TODO 9    colored lines (for better readabilty)
+    //TODO      output layout to (SUB, CAT, ID)
+    //TODO 4    write one function for displaying, and use that for every part of the app
+    //TODO 3    go to only String and DateTime-Mode (no int gibberish anymore)
+    //TODO 5    format output so that it's formed to columns
 
     //endregion
 }
