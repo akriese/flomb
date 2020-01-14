@@ -49,6 +49,9 @@
     <string name="no_data_in_month">No data in the past month!</string>
     <string name="exit_question">Wanna exit, biiiitch?</string>
     <string name="delete_question">Sicher, dass du den Eintrag löschen willst?</string>
+    <string name="do_nothing">Let it live!</string>
+    <string name="delete_this_entry">Kill it!</string>
+    <string name="delete_alert">Delete Alert</string>
 
     <string-array name="categories">
         <item>Food</item>

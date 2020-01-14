@@ -67,12 +67,12 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     public static String PACKAGE_NAME;
 
     //region Android ELemente
-    public Button btn_addfinal, btn_add, btn_statssets, btn_datepicker, btn_back, btn_settings, btn_resetEntry, btn_updateEntry;
+    public Button btn_addfinal, btn_datepicker, btn_back;
     public EditText edt_place, edt_description, edt_amount, edt_editRow, edt_search, edt_loan_desc, edt_loan_amt;
     public TextView txv_headline, txv_addsumup, txv_sumup11, txv_statssetsumup, txv_statsdisplay;
     public RadioButton rbn_f, rbn_l, rbn_o, rbn_m, rbn_b, rbn_single, rbn_compare, rbn_change;
     public CheckBox cbx_keepdata, cbx_f, cbx_l, cbx_m, cbx_o, cbx_b, cbx_unmapLoan;
-    public LinearLayout lnl_description, lnl_dateplace, lnl_cbxfateb, lnl_editRow, lnl_date1, lnl_date2;
+    public LinearLayout lnl_date2;
     public RelativeLayout rll_add, rll_start, rll_statssets, rll_settings, rll_stats, rll_abo_loan;
     public ScrollView scv_sumup1;
     public Spinner spi_description;
@@ -82,12 +82,10 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     //region other Elements and variables
     private int app_state;
     private int amount=0, id, datePickerMode;
-    private int overall_all, overall_withoutBig, date_diff1, date_diff2;
-    private int[][] summed_subs;
+    private int date_diff1, date_diff2;
     private String description="Beschreibung", category, subcategory, place;
     private String dateAdd;
-    private ArrayList<String> categories, categories_short, food_subcategories, living_subcategories,
-            other_subcategories, move_subcategories, big_subcategories;
+    private ArrayList<String> categories, categories_short;
 
     private ArrayList<ArrayList<String>> sub_categories;
     private DateTime d1f, d1t, d2f, d2t, dLoanF, dLoanT;
@@ -113,10 +111,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         //region Initialisierung der Android-Elemente
         //region general
         txv_headline = findViewById(R.id.txv_headline);
-        btn_add = findViewById(R.id.btn_add);
-        btn_statssets = findViewById(R.id.btn_statssets);
         btn_back = findViewById(R.id.btn_back);
-        btn_settings = findViewById(R.id.btn_settings);
         rll_start = findViewById(R.id.rll_start);
         scv_sumup1 = findViewById(R.id.scv_sumup1);
         txv_sumup11 = findViewById(R.id.txv_sumup11);
@@ -134,14 +129,11 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         rbn_m = findViewById(R.id.rbn_m);
         rbn_b = findViewById(R.id.rbn_b);
         cbx_keepdata = findViewById(R.id.cbx_keepdata);
-        lnl_description = findViewById(R.id.lnl_description);
-        lnl_dateplace = findViewById(R.id.lnl_dateplace);
         rll_add = findViewById(R.id.rll_add);
         spi_description = findViewById(R.id.spi_description);
         //endregion
         //region stats
         rll_statssets = findViewById(R.id.rll_statssets);
-        lnl_cbxfateb = findViewById(R.id.lnl_cbxfateb);
         cbx_f = findViewById(R.id.cbx_f);
         cbx_l = findViewById(R.id.cbx_l);
         cbx_m = findViewById(R.id.cbx_m);
@@ -158,9 +150,6 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         //endregion
         //region settings
         rll_settings = findViewById(R.id.rll_settings);
-        lnl_editRow = findViewById(R.id.lnl_editRow);
-        btn_resetEntry = findViewById(R.id.btn_resetEntry);
-        btn_updateEntry = findViewById(R.id.btn_updateEntry);
         edt_editRow = findViewById(R.id.edt_editRowId);
         edt_search = findViewById(R.id.edt_search);
         btn_loan_from = findViewById(R.id.btn_date_abo_from);
@@ -170,7 +159,6 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         //endregion
         //region stats
         rll_stats = findViewById(R.id.rll_stats);
-        lnl_date1 = findViewById(R.id.lnl_date1);
         lnl_date2 = findViewById(R.id.lnl_date2);
         txv_statsdisplay = findViewById(R.id.txv_statsdisplay);
         //endregion
@@ -191,6 +179,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         btn_back.setVisibility(View.INVISIBLE);
         app_state = FLOMB_START;
 
+        ArrayList<String> food_subcategories, living_subcategories, other_subcategories, move_subcategories, big_subcategories;
         categories = new ArrayList<>(Arrays.asList(getResources().getStringArray(R.array.categories)));
         categories_short = new ArrayList<>(Arrays.asList(getResources().getStringArray(R.array.categories_short)));
         food_subcategories = new ArrayList<>(Arrays.asList(getResources().getStringArray(R.array.food_subcategories)));
@@ -341,6 +330,17 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (s.length() > 1) {
+                    int pos = s.charAt(0) == '-' ? 1 : 0;
+                    s = s.subSequence(pos, s.length());
+                    while (s.charAt(0) == '0' && s.length() > 1)
+                        s = s.subSequence(1, s.length());
+                    s = (pos == 1 ? "-" : "") + s;
+                    if (!edt_amount.getText().toString().equals(s.toString())) {
+                        edt_amount.setText(s.toString());
+                        edt_amount.setSelection(s.length());
+                    }
+                }
                 updateInformation();
             }
 
@@ -683,14 +683,14 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     }
 
     public void insertToDB () {
-        boolean isInserted = myDB.insertData(amount, category, subcategory, description, place, dateAdd);
+        boolean isInserted = myDB.insertData(amount, category, subcategory, remSpaces(description), remSpaces(place), dateAdd);
         if (isInserted) Toast.makeText(MainActivity.this,getString(R.string.entry_added),Toast.LENGTH_LONG).show();
         else Toast.makeText(MainActivity.this,getString(R.string.entry_not_added),Toast.LENGTH_LONG).show();
         keepData();
     }
 
     public void updateDB () {
-        boolean isInserted = myDB.updateData(id, amount, category, subcategory, description, place, dateAdd);
+        boolean isInserted = myDB.updateData(id, amount, category, subcategory, remSpaces(description), remSpaces(place), dateAdd);
         if (isInserted){
             Toast.makeText(MainActivity.this,getString(R.string.entry_updated),Toast.LENGTH_LONG).show();
         }
@@ -700,9 +700,10 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
     public void updateInformation(){
         String t = edt_amount.getText().toString();
-        if (t.length() == 0) edt_amount.setText("0");
-        else if (!(t.charAt(0) == '-' && t.length() == 1))
-            amount = Integer.parseInt(edt_amount.getText().toString());
+        Log.wtf("UPDATE", Integer.toString(t.length()));
+        if (!(t.length() == 0))
+            if (!(t.charAt(0) == '-' && t.length() == 1))
+                amount = Integer.parseInt(edt_amount.getText().toString());
         description = edt_description.getText().toString();
         place = edt_place.getText().toString();
 
@@ -730,6 +731,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
             edt_description.setText("");
             edt_place.setText("");
+            edt_amount.setText("");
             btn_datepicker.setText(getString(R.string.date));
         }
         editor.apply();
@@ -829,6 +831,29 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         }
     }
 
+    //string date to other format string date
+    public String s_to_s(String a, String from, String to) {
+        String y, m, d;
+        switch (from){
+            case "de":
+                String arr[] = a.split(".");
+                y = arr[2]; m = arr[1]; d = arr[0];
+                break;
+            case "en":
+            default:
+                arr = a.split("-");
+                y = arr[0]; m = arr[1]; d = arr[2];
+        }
+
+        switch (to){
+            case "de":
+                return d + "." + m + "." + y;
+            case "en":
+            default :
+                return y + "-" + m + "-" + d;
+        }
+    }
+
     //string to date
     public DateTime s_to_d(String date, String form){
         DateTime r;
@@ -862,9 +887,8 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
                 case "unterwegs": kurzOrt = "un."; break;
                 default: kurzOrt = c.getString(8); break;
             }
-
-            res.append(c_to_e(c.getInt(1)) +getString(R.string.für) + c.getString(4)
-                    +" ("+kurz+", "+ c.getString(3)+")" + getString(R.string.am) + c.getString(9)+" ("+c.getInt(0)+")" + getString(R.string.in) +kurzOrt+"\n");
+            String output = String.format("%s (%d): %9.9s, %10.12s (%s, %3.3s)\n", c.getString(9), c.getInt(0), c_to_e(c.getInt(1)), c.getString(4), kurz, c.getString(3));
+            res.append(output);
         }
 
         res.insert(0, "\n");
@@ -881,14 +905,15 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         Log.wtf("BETWEEN", ""+between);
 
         c = myDB.getSummaryOfPastMonth();
-        overall_all = overall_withoutBig = 0;
+        int overall_all = 0, overall_withoutBig = 0;
         while (c.moveToNext()){
             int amnt = c.getInt(1);
             String cat = c.getString(0);
             overall_all += amnt; overall_withoutBig += amnt;
             if (cat.equals("Big"))
                 overall_withoutBig -= amnt;
-            res.insert(0, cat + ": " + c_to_e(amnt) +" ("+c_to_e(amnt/between)+" pro Tag)\n");
+            String output = String.format("%s: %s (%s pro Tag)\n", cat, c_to_e(amnt), c_to_e(amnt/between));
+            res.insert(0, output);
         }
 
         res.insert(0,"Without Big: "+c_to_e(overall_withoutBig)+" ("+c_to_e(overall_withoutBig/between)+" pro Tag)\n\n");
@@ -897,12 +922,18 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         return res;
     }
 
-
     //cents to euros
     public String c_to_e(double cents){
         DecimalFormat df = new DecimalFormat("0.00");
         double val = (double)((int) cents)/100.0;
         return df.format(val) + "€";
+    }
+
+    public String remSpaces(String s){
+        String res = s;
+        while (res.charAt(res.length() - 1) == ' ')
+            res = res.substring(0, res.length() - 1);
+        return res;
     }
 
     public int getIndexOfCheckedRbn(ArrayList<RadioButton> list){
@@ -951,16 +982,24 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     }
 
     public void onResetChosenClick(View view) {
+        int id = getChosenID(0);
+        Cursor c = myDB.searchForUpdateEntry(id);
+        if (c.getCount() == 0) {
+            Toast.makeText(MainActivity.this, R.string.no_or_wrong_id, Toast.LENGTH_LONG).show();
+            return;
+        }
+        else c.moveToFirst();
+        String entry = c.getString(4) + "; " + c_to_e(c.getInt(1)) + "; " + c.getString(9);
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage(getResources().getString(R.string.delete_question))
+        builder.setMessage(getResources().getString(R.string.delete_question) + " " + entry)
                 .setCancelable(true)
-                .setTitle("Delete Alert")
-                .setPositiveButton("Kill it!", new DialogInterface.OnClickListener() {
+                .setTitle(R.string.delete_alert)
+                .setPositiveButton(R.string.delete_this_entry, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         resetEntry();
                     }
                 })
-                .setNegativeButton("Let if live!", new DialogInterface.OnClickListener() {
+                .setNegativeButton(R.string.do_nothing, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         dialog.cancel();
                     }
@@ -1018,14 +1057,13 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         rbn_list.get(catIndex).setChecked(true);
 
         //set sub_cat
-        //set var
         subcategory = res.getString(3);
         spi_description.setAdapter(adapter_array.get(catIndex));
         spi_description.setSelection(sub_categories.get(catIndex).indexOf(subcategory));
 
         // set date
         dateAdd = res.getString(9);
-        btn_datepicker.setText(dateAdd);
+        btn_datepicker.setText(s_to_s(dateAdd, "en", "de"));
 
         //set Description, place, amount
         description = res.getString(4);
@@ -1034,7 +1072,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         edt_place.setText(place);
         amount = res.getInt(1);
 
-        edt_amount.setText(amount);
+        edt_amount.setText(Integer.toString(amount));
 
         updateInformation();
     }
@@ -1154,14 +1192,14 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     //endregion settings + children
 
     //region TO-DO area
+    //TODO      Nice Graphics
+    //TODO      Query helper (Code Blocks to choose from)
     //TODO 7    abo-func
     //TODO 8    txv: link to update-window --> faster updates
     //TODO 3    use same func for stats, search and front page
     //TODO 6    remember/recommendation func for edt_description (AI style?), AutoCompleteTextView
     //TODO 9    colored lines (for better readabilty)
-    //TODO      output layout to (SUB, CAT, ID)
     //TODO 4    write one function for displaying, and use that for every part of the app
-    //TODO 2    go to only String and DateTime-Mode (no int gibberish anymore)
     //TODO 5    format output so that it's formed to columns
 
     //endregion
