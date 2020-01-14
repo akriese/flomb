@@ -887,7 +887,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
                 case "unterwegs": kurzOrt = "un."; break;
                 default: kurzOrt = c.getString(8); break;
             }
-            String output = String.format("%s (%d): %9.9s, %10.12s (%s, %3.3s)\n", c.getString(9), c.getInt(0), c_to_e(c.getInt(1)), c.getString(4), kurz, c.getString(3));
+            String output = String.format("%s (%d): %9.9s, %12s (%s, %3s)\n", c.getString(9), c.getInt(0), c_to_e(c.getInt(1)), c.getString(4), kurz, c.getString(3));
             res.append(output);
         }
 
