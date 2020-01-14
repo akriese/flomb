@@ -58,44 +58,38 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public boolean insertData(int amount, String category, String subcategory, String description,
-                              int dateYear, int dateMonth, int dateDay, String place){
+                              String place, String date){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(COL_1,amount);
         contentValues.put(COL_2,category);
         contentValues.put(COL_3,subcategory);
         contentValues.put(COL_4,description);
-        contentValues.put(COL_5,dateYear);
-        contentValues.put(COL_6,dateMonth);
-        contentValues.put(COL_7,dateDay);
+        contentValues.put(COL_5,0);
+        contentValues.put(COL_6,0);
+        contentValues.put(COL_7,0);
         contentValues.put(COL_8,place);
-        contentValues.put(COL_9,dateYear+"-"+((dateMonth<10) ? "0" : "") + dateMonth + "-" + ((dateDay<10) ? "0" : "") + dateDay);
+        contentValues.put(COL_9,date);
         long result = db.insert(TABLE_NAME,null,contentValues);
 
         return !(result==-1);
     }
 
     public boolean updateData(int id, int amount, String category, String subcategory,
-                              String description, int dateYear, int dateMonth, int dateDay, String place){
+                              String description, String place, String date){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(COL_1,amount);
         contentValues.put(COL_2,category);
         contentValues.put(COL_3,subcategory);
         contentValues.put(COL_4,description);
-        contentValues.put(COL_5,dateYear);
-        contentValues.put(COL_6,dateMonth);
-        contentValues.put(COL_7,dateDay);
+        contentValues.put(COL_5,0);
+        contentValues.put(COL_6,0);
+        contentValues.put(COL_7,0);
         contentValues.put(COL_8,place);
-        contentValues.put(COL_9,dateYear+"-"+((dateMonth<10) ? "0" : "") + dateMonth + "-" + ((dateDay<10) ? "0" : "") + dateDay);
+        contentValues.put(COL_9,date);
         long result = db.update(TABLE_NAME, contentValues, "ID = ?", new String[] {Integer.toString(id)});
         return !(result==-1);
-    }
-
-    public Cursor getAllData(){
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor res = db.rawQuery("SELECT * FROM "+TABLE_NAME,null);
-        return res;
     }
 
     public void insertDateColumn(){

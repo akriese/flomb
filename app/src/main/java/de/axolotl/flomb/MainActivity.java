@@ -81,18 +81,15 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     //endregion
     //region other Elements and variables
     private int app_state;
-    private Calendar calendar;
-    private int nowYear, nowMonth, nowDay, amount=0, dateYear, dateMonth, dateDay, id, datePickerMode;
+    private int amount=0, id, datePickerMode;
     private int overall_all, overall_withoutBig, date_diff1, date_diff2;
     private int[][] summed_subs;
-    private boolean update_dialog=false;
     private String description="Beschreibung", category, subcategory, place;
-    private String dateAdd, dateString, date1fromString, date1toString, date2fromString, date2toString;
+    private String dateAdd;
     private ArrayList<String> categories, categories_short, food_subcategories, living_subcategories,
             other_subcategories, move_subcategories, big_subcategories;
 
     private ArrayList<ArrayList<String>> sub_categories;
-    private int daysInbetween;
     private DateTime d1f, d1t, d2f, d2t, dLoanF, dLoanT;
     public ArrayList<ArrayAdapter<CharSequence>> adapter_array;
     public ArrayList<RadioButton> rbn_list;
@@ -185,11 +182,6 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
         myDB = new DatabaseHelper(this);
         myDBBackup = new DatabaseHelperBackup(this);
-
-        calendar = Calendar.getInstance();
-        nowYear = calendar.get(Calendar.YEAR);
-        nowMonth = calendar.get(Calendar.MONTH)+1; //begint bei 0 januar
-        nowDay = calendar.get(Calendar.DAY_OF_MONTH);
 
         rll_add.setVisibility(View.INVISIBLE);
         rll_statssets.setVisibility(View.INVISIBLE);
@@ -415,7 +407,6 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         app_state = FLOMB_ADD;
         txv_headline.setText(R.string.add);
         btn_addfinal.setText(R.string.add);
-        update_dialog = false;
         SharedPreferences prefGetter = getSharedPreferences("USER_PREFERENCES_ADD", MODE_PRIVATE);
 
         int checked_rbn = prefGetter.getInt("RBN", 0);
@@ -426,9 +417,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         subcategory = sub_categories.get(checked_rbn).get(prefGetter.getInt("SUB", 0));
         edt_place.setText(prefGetter.getString("PLACE",""));
         if (edt_place.getText().toString().equals("")) cbx_keepdata.setChecked(true);
-        dateYear = prefGetter.getInt("YEAR", Calendar.getInstance().get(Calendar.YEAR));
-        dateMonth = prefGetter.getInt("MONTH", Calendar.getInstance().get(Calendar.MONTH));
-        dateDay = prefGetter.getInt("DAY", Calendar.getInstance().get(Calendar.DAY_OF_MONTH));
+        dateAdd = prefGetter.getString("DATE", d_to_s(DateTime.now(), "en"));
         amount = prefGetter.getInt("AMOUNT", 0);
         edt_amount.setText(Integer.toString(amount));
     }
@@ -526,10 +515,11 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         Calendar c = Calendar.getInstance();
         if (app_state == FLOMB_STATSETS) {
             SharedPreferences p = getSharedPreferences("USER_PREFERENCES_STATS", MODE_PRIVATE);
-            d1f = new DateTime(p.getInt("Y1F", c.get(Calendar.YEAR)), p.getInt("M1F", c.get(Calendar.MONTH)+1), p.getInt("D1F", c.get(Calendar.DAY_OF_MONTH)),13,0,0);
-            d1t = new DateTime(p.getInt("Y1T", c.get(Calendar.YEAR)), p.getInt("M1T", c.get(Calendar.MONTH)+1), p.getInt("D1T", c.get(Calendar.DAY_OF_MONTH)+1),13,0,0);
-            d2f = new DateTime(p.getInt("Y2F", c.get(Calendar.YEAR)), p.getInt("M2F", c.get(Calendar.MONTH)+1), p.getInt("D2F", c.get(Calendar.DAY_OF_MONTH)),13,0,0);
-            d2t = new DateTime(p.getInt("Y2T", c.get(Calendar.YEAR)), p.getInt("M2T", c.get(Calendar.MONTH)+1), p.getInt("D2T", c.get(Calendar.DAY_OF_MONTH)+1),13,0,0);
+            String default_date = d_to_s(DateTime.now(), "en");
+            d1f = s_to_d(p.getString("D1F", default_date), "en");
+            d2f = s_to_d(p.getString("D2F", default_date), "en");
+            d1t = s_to_d(p.getString("D1T", default_date), "en");
+            d2t = s_to_d(p.getString("D2T", default_date), "en");
             btn_date1from.setText(getString(R.string.from) + d_to_s(d1f, "de"));
             btn_date1to.setText(getString(R.string.to) + d_to_s(d1t, "de"));
             btn_date2from.setText(getString(R.string.from) + d_to_s(d2f, "de"));
@@ -547,9 +537,10 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     }
 
     public void showDatePickerDialog(){
-        int loc_y = dateYear;
-        int loc_m = dateMonth;
-        int loc_d = dateDay;
+        DateTime dtAdd = s_to_d(dateAdd, "en");
+        int loc_y = dtAdd.getYear();
+        int loc_m = dtAdd.getMonthOfYear();
+        int loc_d = dtAdd.getDayOfMonth();
         if (app_state == FLOMB_STATSETS){
             switch(datePickerMode){
                 case 0: break;
@@ -602,23 +593,19 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
                 case 1: d1f = new DateTime(arg1, arg2+1, arg3, 13, 0,0);
                     btn_date1from.setText(getString(R.string.from) + d_to_s(d1f, "de"));
                     calcDateDiff(d1f, d1t, 1);
-                    e.putInt("Y1F", d1f.getYear()); e.putInt("M1F", d1f.getMonthOfYear());
-                    e.putInt("D1F", d1f.getDayOfMonth()); break;
+                    e.putString("D1F", d_to_s(d1f, "en")); break;
                 case 2: d1t = new DateTime(arg1, arg2+1, arg3, 13, 0,0);
                     btn_date1to.setText(getString(R.string.to) + d_to_s(d1t, "de"));
                     calcDateDiff(d1f, d1t, 1);
-                    e.putInt("Y1T", d1t.getYear()); e.putInt("M1T", d1t.getMonthOfYear());
-                    e.putInt("D1T", d1t.getDayOfMonth()); break;
+                    e.putString("D1T", d_to_s(d1t, "en")); break;
                 case 3: d2f = new DateTime(arg1, arg2+1, arg3, 13, 0,0);
                     btn_date2from.setText(getString(R.string.from) + d_to_s(d2f, "de"));
                     calcDateDiff(d2f, d2t, 2);
-                    e.putInt("Y2F", d2f.getYear()); e.putInt("M2F", d2f.getMonthOfYear());
-                    e.putInt("D2F", d2f.getDayOfMonth()); break;
+                    e.putString("D2F", d_to_s(d2f, "en")); break;
                 case 4: d2t = new DateTime(arg1, arg2+1, arg3, 13, 0,0);
                     btn_date2to.setText(getString(R.string.to) + d_to_s(d2t, "de"));
                     calcDateDiff(d2f, d2t, 2);
-                    e.putInt("Y2T", d1f.getYear()); e.putInt("M2T", d2t.getMonthOfYear());
-                    e.putInt("D2T", d2t.getDayOfMonth()); break;
+                    e.putString("D2T", d_to_s(d2t, "en")); break;
             }
             e.apply();
         }
@@ -632,22 +619,13 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
                 btn_loan_to.setText(d_to_s(dLoanT, "de"));
             }
         }
-
     }
 
     //set Button text and sets variables for adding
     private void showDateAddMode(int year, int month, int day) {
-        btn_datepicker.setText(new StringBuilder().append(day).append(".")
-                .append(month).append(".").append(year));
-        DateTimeZone UTC = DateTimeZone.forID("UTC");
-        DateTime travelStart= new DateTime(2017,7,5,12,0,0,UTC);
-        DateTime addDatedt = new DateTime(year,month,day,13,0,0,UTC);
-
-        daysInbetween=Days.daysBetween(travelStart.toLocalDateTime(),addDatedt.toLocalDateTime()).getDays();
-        dateAdd = (day+"."+month+"."+year+" ("+daysInbetween+")");
-        dateYear = year;
-        dateMonth = month;
-        dateDay = day;
+        DateTime d = new DateTime(year, month, day, 0, 0, 0);
+        btn_datepicker.setText(d_to_s(d, "de"));
+        dateAdd = d_to_s(d, "en");
     }
 
     public void calcDateDiff(DateTime a, DateTime b, int number){
@@ -684,10 +662,6 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         updateInformation();
     }
 
-    public void cbxMinusClick(View view) {
-        updateInformation();
-    }
-
     public void addData(View view){
         addOrUpdate();
     }
@@ -709,14 +683,14 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     }
 
     public void insertToDB () {
-        boolean isInserted = myDB.insertData(amount, category, subcategory, description, dateYear, dateMonth, dateDay, place);
+        boolean isInserted = myDB.insertData(amount, category, subcategory, description, place, dateAdd);
         if (isInserted) Toast.makeText(MainActivity.this,getString(R.string.entry_added),Toast.LENGTH_LONG).show();
         else Toast.makeText(MainActivity.this,getString(R.string.entry_not_added),Toast.LENGTH_LONG).show();
         keepData();
     }
 
     public void updateDB () {
-        boolean isInserted = myDB.updateData(id, amount, category, subcategory, description, dateYear, dateMonth, dateDay, place);
+        boolean isInserted = myDB.updateData(id, amount, category, subcategory, description, place, dateAdd);
         if (isInserted){
             Toast.makeText(MainActivity.this,getString(R.string.entry_updated),Toast.LENGTH_LONG).show();
         }
@@ -743,9 +717,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
             editor.putInt("RBN", getIndexOfCheckedRbn(rbn_list));
             editor.putInt("SUB", spi_description.getSelectedItemPosition());
             //eingegebenes Datum
-            editor.putInt("YEAR", dateYear);
-            editor.putInt("MONTH", dateMonth);
-            editor.putInt("DAY", dateDay);
+            editor.putString("DATE", dateAdd);
             editor.putInt("AMOUNT", amount);
         }
         else {
@@ -754,9 +726,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
             editor.putInt("SUB", 0);
             editor.putInt("AMOUNT", 0);
             //heutiges Datum
-            editor.putInt("YEAR", nowYear);
-            editor.putInt("MONTH", nowMonth);
-            editor.putInt("DAY", nowDay);
+            editor.putString("DATE", d_to_s(DateTime.now(), "en"));
 
             edt_description.setText("");
             edt_place.setText("");
@@ -771,23 +741,23 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     public void onRbnStatsClick(View view) {
         if (rbn_single.isChecked()){
             lnl_date2.setVisibility(View.INVISIBLE);
-            txv_statssetsumup.setText(getString(R.string.dates_of) + date1fromString +
-                    getString(R.string.until) + date1toString + getString(R.string.summarized));
+            txv_statssetsumup.setText(getString(R.string.dates_of) + d_to_s(d1f, "de") +
+                    getString(R.string.until) + d_to_s(d1t, "de")+ getString(R.string.summarized));
         }
         else if (rbn_compare.isChecked()){
             lnl_date2.setVisibility(View.VISIBLE);
-            txv_statssetsumup.setText(getString(R.string.dates_of) + date1fromString + " - "+
-                    date1toString + getString(R.string.and) + date2fromString + " - " + date2toString + getString(R.string.compared));
+            txv_statssetsumup.setText(getString(R.string.dates_of) + d_to_s(d1f , "de")+ " - "+
+                    d_to_s(d1t, "de")+ getString(R.string.and) + d_to_s(d2f, "de")+ " - " + d_to_s(d2t, "de") + getString(R.string.compared));
         }
         else if (rbn_change.isChecked()){
             lnl_date2.setVisibility(View.INVISIBLE);
-            txv_statssetsumup.setText(getString(R.string.change_from) + date1fromString +
-                    getString(R.string.until) + date1toString + getString(R.string.showed));
+            txv_statssetsumup.setText(getString(R.string.change_from) + d_to_s(d1f, "de") +
+                    getString(R.string.until) + d_to_s(d1t, "de") + getString(R.string.showed));
         }
     }
 
     public void showStats(View view) {
-        if (!cbx_f.isChecked()&&!cbx_l.isChecked()&&!cbx_m.isChecked()&&!cbx_o.isChecked()&&!cbx_b.isChecked()){
+        if (!cbx_f.isChecked() && !cbx_l.isChecked() && !cbx_m.isChecked() && !cbx_o.isChecked() && !cbx_b.isChecked()){
             //nothing
             Toast.makeText(MainActivity.this, R.string.choose_category, Toast.LENGTH_LONG).show();
         }
@@ -851,9 +821,11 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     //date to string
     public String d_to_s(DateTime a, String form) {
         switch (form){
-            case "de": return ((a.getDayOfMonth()<10) ? "0" : "")+a.getDayOfMonth()+"."+((a.getMonthOfYear()<10) ? "0" : "")+a.getMonthOfYear()+"." + a.getYear();
+            case "de":
+                return ((a.getDayOfMonth()<10) ? "0" : "")+a.getDayOfMonth()+"."+((a.getMonthOfYear()<10) ? "0" : "")+a.getMonthOfYear()+"." + a.getYear();
             case "en":
-            default : return a.getYear()+"-"+((a.getMonthOfYear()<10) ? "0" : "")+a.getMonthOfYear()+"-" +((a.getDayOfMonth()<10) ? "0" : "")+a.getDayOfMonth() ;
+            default :
+                return a.getYear()+"-"+((a.getMonthOfYear()<10) ? "0" : "")+a.getMonthOfYear()+"-" +((a.getDayOfMonth()<10) ? "0" : "")+a.getDayOfMonth() ;
         }
     }
 
@@ -1025,7 +997,6 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
             Toast.makeText(MainActivity.this, getString(R.string.id_not_available),Toast.LENGTH_LONG).show();
             return;
         }
-        update_dialog = true;
         rll_settings.setVisibility(View.INVISIBLE);
         goToAddLayout();
         if (copy) {
@@ -1052,13 +1023,9 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         spi_description.setAdapter(adapter_array.get(catIndex));
         spi_description.setSelection(sub_categories.get(catIndex).indexOf(subcategory));
 
-        //set date
-        dateYear = res.getInt(5);
-        dateMonth = res.getInt(6);
-        dateDay = res.getInt(7);
-
-        btn_datepicker.setText(new StringBuilder().append(dateDay).append(".")
-                .append(dateMonth).append(".").append(dateYear));
+        // set date
+        dateAdd = res.getString(9);
+        btn_datepicker.setText(dateAdd);
 
         //set Description, place, amount
         description = res.getString(4);
@@ -1189,12 +1156,12 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     //region TO-DO area
     //TODO 7    abo-func
     //TODO 8    txv: link to update-window --> faster updates
-    //TODO 2    use same func for stats, search and front page
+    //TODO 3    use same func for stats, search and front page
     //TODO 6    remember/recommendation func for edt_description (AI style?), AutoCompleteTextView
     //TODO 9    colored lines (for better readabilty)
     //TODO      output layout to (SUB, CAT, ID)
     //TODO 4    write one function for displaying, and use that for every part of the app
-    //TODO 3    go to only String and DateTime-Mode (no int gibberish anymore)
+    //TODO 2    go to only String and DateTime-Mode (no int gibberish anymore)
     //TODO 5    format output so that it's formed to columns
 
     //endregion
