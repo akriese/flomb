@@ -537,7 +537,13 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     }
 
     public void showDatePickerDialog(){
-        DateTime dtAdd = s_to_d(dateAdd, "en");
+        DateTime dtAdd;
+        if (app_state == FLOMB_ADD)
+            dtAdd = s_to_d(dateAdd, "en");
+        else if (app_state == FLOMB_STATSETS)
+            dtAdd = d1f;
+        else                                // FLOMB_LOAN
+            dtAdd = dLoanF;
         int loc_y = dtAdd.getYear();
         int loc_m = dtAdd.getMonthOfYear();
         int loc_d = dtAdd.getDayOfMonth();
@@ -877,23 +883,23 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         c.moveToPosition(-1);
 
         while (c.moveToNext()){
-            String kurz, kurzOrt;
             String s = c.getString(2);
-            kurz = categories_short.get(categories.indexOf(s));
+            String kurz = categories_short.get(categories.indexOf(s));;
 
-            switch (c.getString(8)){
-                case "Berlin": kurzOrt = "B."; break;
-                case "Jena": kurzOrt = "J."; break;
-                case "unterwegs": kurzOrt = "un."; break;
-                default: kurzOrt = c.getString(8); break;
-            }
-            String output = String.format("%s (%d): %9.9s, %12s (%s, %3s)\n", c.getString(9), c.getInt(0), c_to_e(c.getInt(1)), c.getString(4), kurz, c.getString(3));
+            //switch (c.getString(8)){
+                //case "Berlin": kurzOrt = "B."; break;
+                //case "Jena": kurzOrt = "J."; break;
+                //case "unterwegs": kurzOrt = "un."; break;
+                //default: kurzOrt = c.getString(8); break;
+            //}
+
+            String output = String.format("%s (%d): %8.8s, %10.10s (%s)\n", c.getString(9), c.getInt(0), c_to_e(c.getInt(1)), c.getString(4), kurz, c.getString(3));
             res.append(output);
         }
 
         res.insert(0, "\n");
 
-        //ermittle #Tage des letzten Monats
+        //ermittle #Tage der Query
         String d1,d2;
         c.moveToFirst();
         d2 = c.getString(9);
@@ -902,11 +908,10 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         Cursor r2 = myDB.getDaysBetween(d1,d2);
         r2.moveToFirst();
         double between = (double) r2.getInt(0) + 1;
-        Log.wtf("BETWEEN", ""+between);
 
         c = myDB.getSummaryOfPastMonth();
         int overall_all = 0, overall_withoutBig = 0;
-        while (c.moveToNext()){
+        while (c.moveToNext()) {
             int amnt = c.getInt(1);
             String cat = c.getString(0);
             overall_all += amnt; overall_withoutBig += amnt;
@@ -918,6 +923,9 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
         res.insert(0,"Without Big: "+c_to_e(overall_withoutBig)+" ("+c_to_e(overall_withoutBig/between)+" pro Tag)\n\n");
         res.insert(0,"ALL: "+ c_to_e(overall_all) +" ("+c_to_e(overall_all/between)+" pro Tag)\n");
+
+        res.insert(0, String.format("Daten vom %s bis %s (%s Tage)\n\n",
+                s_to_s(d1, "en", "de"), s_to_s(d2, "en", "de"), (int) between));
 
         return res;
     }
@@ -1194,13 +1202,13 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     //region TO-DO area
     //TODO      Nice Graphics
     //TODO      Query helper (Code Blocks to choose from)
-    //TODO 7    abo-func
-    //TODO 8    txv: link to update-window --> faster updates
-    //TODO 3    use same func for stats, search and front page
-    //TODO 6    remember/recommendation func for edt_description (AI style?), AutoCompleteTextView
-    //TODO 9    colored lines (for better readabilty)
-    //TODO 4    write one function for displaying, and use that for every part of the app
-    //TODO 5    format output so that it's formed to columns
+    //TODO 5    abo-func
+    //TODO 6    txv: link to update-window --> faster updates
+    //TODO 1    use same func for stats, search and front page
+    //TODO 4    remember/recommendation func for edt_description (AI style?), AutoCompleteTextView
+    //TODO 7    colored lines (for better readabilty)
+    //TODO 1    write one function for displaying, and use that for every part of the app
+    //TODO 3    format output so that it's formed to columns
 
     //endregion
 }
