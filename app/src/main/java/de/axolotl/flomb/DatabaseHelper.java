@@ -101,10 +101,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public Cursor getQueryData(String cat, String fr_str, String to_str){
         String selectionDate = COL_9+" BETWEEN '"+fr_str+"' AND '"+to_str+"'";
-        //Log.wtf("QUERY",fr_str);
-        //Log.wtf("QUERY",to_str);
-        //Log.wtf("QUERY", selectionDate);
-        Log.wtf("CATS",cat);
         SQLiteDatabase db = this.getReadableDatabase();
         return db.rawQuery("SELECT * FROM "+TABLE_NAME+" WHERE " + selectionDate + " AND " +
                 COL_2 + " IN (" + cat + ") ORDER BY "+COL_9+" DESC",null);
@@ -141,10 +137,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public Cursor searchQuery(String s){
-        SQLiteDatabase db = this.getWritableDatabase();
-        return db.rawQuery("SELECT "+ COL_1 + ","+ COL_4 + ","+ COL_9 + ","+ COL_8 +" FROM "+
-                TABLE_NAME + " WHERE " + COL_4 + " LIKE '%" + s + "%'", null);
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.rawQuery("SELECT * FROM "+ TABLE_NAME + " WHERE " + COL_4 +
+                " LIKE '%" + s + "%' ORDER BY " + COL_9 + " DESC", null);
     }
+
+    public Cursor searchQuerySummary(String s){
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.rawQuery("SELECT " + COL_2 + ", SUM(" + COL_1 + ") FROM "+ TABLE_NAME + " WHERE " + COL_4 +
+                " LIKE '%" + s + "%' GROUP BY "+COL_2, null);
+    }
+
 
     public Cursor doQuery(String q){
         SQLiteDatabase db = this.getWritableDatabase();

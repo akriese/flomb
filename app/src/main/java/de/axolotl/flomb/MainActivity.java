@@ -309,7 +309,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
             txv_sumup11.setText(R.string.no_data_in_month);
             return;
         }
-        StringBuilder builder = buildQueriedData(res);
+        StringBuilder builder = buildQueriedData(res, myDB.getSummaryOfPastMonth());
 
         txv_sumup11.setText(builder.toString());
 
@@ -453,6 +453,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
             case FLOMB_STATSHOW:
                 app_state = FLOMB_STATSETS;
                 rll_stats.setVisibility(View.INVISIBLE);
+                rll_statssets.setVisibility(View.VISIBLE);
                 btn_back.setVisibility(View.VISIBLE);
                 break;
             case FLOMB_UPDATE:
@@ -775,11 +776,14 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
             app_state = FLOMB_STATSHOW;
             InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-            analyzeData();
+            if (rbn_single.isChecked())
+                analyzeData(true);
+            else
+                analyzeData(false);
         }
     }
 
-    public void analyzeData(){
+    public void analyzeData(boolean single){
         String chosen_cats = "";
         for (int i = 0; i < cbx_list.size(); i++) {
             if (cbx_list.get(i).isChecked()) {
@@ -787,40 +791,44 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
                 chosen_cats += "'"+categories.get(i)+"'";
             }
         }
-        StringBuilder builderDetails = new StringBuilder();
-        StringBuilder builderStats = new StringBuilder();
+        StringBuilder builder = new StringBuilder();
         ArrayList<ArrayList<String>> content = new ArrayList<>();
         Cursor r = myDB.getQueryData(chosen_cats, d_to_s(d1f, "en"), d_to_s(d1t, "en"));
         if (r.getCount() == 0) return;
-        while (r.moveToNext()) {
-            ArrayList<String> entry = new ArrayList<>(
-                    Arrays.asList(r.getString(0), c_to_e(r.getInt(1)), r.getString(2),
-                            r.getString(3), r.getString(4), r.getString(8), r.getString(9))
-            );
-            content.add(entry);
+        Cursor summary = myDB.getSummaryOfQuery(chosen_cats, d_to_s(d1f, "en"), d_to_s(d1t, "en"));
+        if (single)
+            builder= buildQueriedData(r, summary);
+        else {
+            StringBuilder builderDetails = new StringBuilder();
+            StringBuilder builderStats = new StringBuilder();
+            while (r.moveToNext()) {
+                ArrayList<String> entry = new ArrayList<>(
+                        Arrays.asList(r.getString(0), c_to_e(r.getInt(1)), r.getString(2),
+                                r.getString(3), r.getString(4), r.getString(8), r.getString(9))
+                );
+                content.add(entry);
+            }
+
+            //sortiert nach daten
+            content.sort(((p1,p2) -> p2.get(6).compareTo(p1.get(6))));
+
+            //TODO schön formatieren
+            for (int i = 0; i < content.size(); i++){
+                builderDetails.append(content.get(i).toString()+"\n");
+            }
+
+            builderStats.append(getString(R.string.dates_of) + d_to_s(d1f, "de") + getString(R.string.until) + d_to_s(d1t, "de") + getString(R.string.summarized)+" ("+date_diff1+" Tage)\n\n");
+            while (summary.moveToNext()){
+                int amt = summary.getInt(1);
+                builderStats.append(summary.getString(0)+": "+c_to_e(amt)+" ("+ c_to_e((amt+0.0)/date_diff1) +" pro Tag)\n");
+                Log.wtf("WHILE",summary.getString(0)+": "+summary.getString(1));
+            }
+
+            //Cursor res2 = myDB.getQueryData(str_arr, d2f, d2t);
+
+            builder.append(builderStats);
+            builder.append("\n\n"+builderDetails);
         }
-
-        //sortiert nach daten
-        content.sort(((p1,p2) -> p2.get(6).compareTo(p1.get(6))));
-
-        //TODO schön formatieren
-        for (int i = 0; i < content.size(); i++){
-            builderDetails.append(content.get(i).toString()+"\n");
-        }
-
-        builderStats.append(getString(R.string.dates_of) + d_to_s(d1f, "de") + getString(R.string.until) + d_to_s(d1t, "de") + getString(R.string.summarized)+" ("+date_diff1+" Tage)\n\n");
-        r = myDB.getSummaryOfQuery(chosen_cats, d_to_s(d1f, "en"), d_to_s(d1t, "en"));
-        while (r.moveToNext()){
-            int amt = r.getInt(1);
-            builderStats.append(r.getString(0)+": "+c_to_e(amt)+" ("+ c_to_e((amt+0.0)/date_diff1) +" pro Tag)\n");
-            Log.wtf("WHILE",r.getString(0)+": "+r.getString(1));
-        }
-
-        //Cursor res2 = myDB.getQueryData(str_arr, d2f, d2t);
-
-        StringBuilder builder = new StringBuilder();
-        builder.append(builderStats);
-        builder.append("\n\n"+builderDetails);
         txv_statsdisplay.setText(builder.toString());
     }
     //endregion
@@ -878,22 +886,24 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     }
 
     //getQueriedData
-    public StringBuilder buildQueriedData(Cursor c){
+    public StringBuilder buildQueriedData(Cursor data, Cursor summary){
         StringBuilder res = new StringBuilder();
-        c.moveToPosition(-1);
+        data.moveToPosition(-1);
 
-        while (c.moveToNext()){
-            String s = c.getString(2);
+        while (data.moveToNext()){
+            String s = data.getString(2);
             String kurz = categories_short.get(categories.indexOf(s));;
 
-            //switch (c.getString(8)){
+            //switch (data.getString(8)){
                 //case "Berlin": kurzOrt = "B."; break;
                 //case "Jena": kurzOrt = "J."; break;
                 //case "unterwegs": kurzOrt = "un."; break;
-                //default: kurzOrt = c.getString(8); break;
+                //default: kurzOrt = data.getString(8); break;
             //}
 
-            String output = String.format("%s (%d): %8.8s, %10.10s (%s)\n", c.getString(9), c.getInt(0), c_to_e(c.getInt(1)), c.getString(4), kurz, c.getString(3));
+            String output = String.format("%s (%d): %8.8s, %-10.10s (%s)\n", data.getString(9),
+                    data.getInt(0), c_to_e(data.getInt(1)), data.getString(4),
+                    kurz, data.getString(3));
             res.append(output);
         }
 
@@ -901,30 +911,31 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
         //ermittle #Tage der Query
         String d1,d2;
-        c.moveToFirst();
-        d2 = c.getString(9);
-        c.moveToLast();
-        d1 = c.getString(9);
+        data.moveToFirst();
+        d2 = data.getString(9);
+        data.moveToLast();
+        d1 = data.getString(9);
         Cursor r2 = myDB.getDaysBetween(d1,d2);
         r2.moveToFirst();
         double between = (double) r2.getInt(0) + 1;
 
-        c = myDB.getSummaryOfPastMonth();
         int overall_all = 0, overall_withoutBig = 0;
-        while (c.moveToNext()) {
-            int amnt = c.getInt(1);
-            String cat = c.getString(0);
-            overall_all += amnt; overall_withoutBig += amnt;
-            if (cat.equals("Big"))
-                overall_withoutBig -= amnt;
-            String output = String.format("%s: %s (%s pro Tag)\n", cat, c_to_e(amnt), c_to_e(amnt/between));
+        while (summary.moveToNext()) {
+            int amnt = summary.getInt(1);
+            String cat = summary.getString(0);
+            overall_all += amnt;
+            overall_withoutBig += (cat.equals("Big") ? 0 : amnt);
+            String output = String.format("%-7.7s:%9.9s (%8.8s pro Tag)\n", cat, c_to_e(amnt), c_to_e(amnt/between));
             res.insert(0, output);
         }
 
-        res.insert(0,"Without Big: "+c_to_e(overall_withoutBig)+" ("+c_to_e(overall_withoutBig/between)+" pro Tag)\n\n");
-        res.insert(0,"ALL: "+ c_to_e(overall_all) +" ("+c_to_e(overall_all/between)+" pro Tag)\n");
+        ;
+        res.insert(0,String.format("%-7.7s:%9.9s (%8.8s pro Tag)\n\n", "W/o Big",
+                c_to_e(overall_withoutBig), c_to_e(overall_withoutBig/between)));
+        res.insert(0,String.format("%-7.7s:%9.9s (%8.8s pro Tag)\n", "ALL",
+                c_to_e(overall_all), c_to_e(overall_all/between)));
 
-        res.insert(0, String.format("Daten vom %s bis %s (%s Tage)\n\n",
+        res.insert(0, String.format("Daten: %s - %s (%s Tage)\n\n",
                 s_to_s(d1, "en", "de"), s_to_s(d2, "en", "de"), (int) between));
 
         return res;
@@ -1101,10 +1112,8 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         setupEntryPage(true);
     }
 
-    public StringBuilder rawQuery(String q, boolean raw){
-        Cursor r;
-        if (raw) r = myDB.doQuery(q);
-        else r = myDB.searchQuery(q);
+    public StringBuilder rawQuery(String q){
+        Cursor r = myDB.doQuery(q);
 
         int col = r.getColumnCount();
         StringBuilder sb = new StringBuilder();
@@ -1118,7 +1127,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         return sb;
     }
 
-    public void displayQueryResults(StringBuilder res, boolean raw){
+    public void displayQueryResults(StringBuilder res){
         rll_settings.setVisibility(View.INVISIBLE);
         rll_stats.setVisibility(View.VISIBLE);
         txv_headline.setText(R.string.results);
@@ -1130,22 +1139,24 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     public void onQueryClick(View view) {
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-        StringBuilder res;
+        StringBuilder strBuild;
         try {
-            res = rawQuery(edt_search.getText().toString(),true);
+            strBuild = rawQuery(edt_search.getText().toString());
         }
         catch(Exception e){
             Toast.makeText(MainActivity.this, R.string.bad_query, Toast.LENGTH_LONG).show();
             return;
         }
-        displayQueryResults(res, true);
+        displayQueryResults(strBuild);
     }
 
     public void onSearchClick(View view) {
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-        StringBuilder res = rawQuery(edt_search.getText().toString(),false);
-        displayQueryResults(res, false);
+        Cursor data = myDB.searchQuery(edt_search.getText().toString());
+        Cursor summary = myDB.searchQuerySummary(edt_search.getText().toString());
+
+        displayQueryResults(buildQueriedData(data, summary));
     }
 
     public void onMapLoanClick(View view) {
