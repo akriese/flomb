@@ -301,6 +301,13 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
         updateFrontPage();
         PACKAGE_NAME = getApplicationContext().getPackageName();
+        //SharedPreferences.Editor e = getSharedPreferences("USER_PREFERENCES_STATS", MODE_PRIVATE).edit();
+        //String def_date = d_to_s(DateTime.now(), "en");
+        //e.putString("D1F", def_date);
+        //e.putString("D1T", def_date);
+        //e.putString("D2F", def_date);
+        //e.putString("D2T", def_date);
+        //e.apply();
     }
 
     public void updateFrontPage(){ //getAllData
@@ -901,8 +908,8 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
                 //default: kurzOrt = data.getString(8); break;
             //}
 
-            String output = String.format("%s (%d): %8.8s, %-10.10s (%s)\n", data.getString(9),
-                    data.getInt(0), c_to_e(data.getInt(1)), data.getString(4),
+            String output = String.format("%s %6.6s: %8.8s, %-10.10s (%s)\n", s_to_s(data.getString(9), "en", "de"),
+                    String.format("(%d)", data.getInt(0)), c_to_e(data.getInt(1)), data.getString(4),
                     kurz, data.getString(3));
             res.append(output);
         }
@@ -925,15 +932,14 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
             String cat = summary.getString(0);
             overall_all += amnt;
             overall_withoutBig += (cat.equals("Big") ? 0 : amnt);
-            String output = String.format("%-7.7s:%9.9s (%8.8s pro Tag)\n", cat, c_to_e(amnt), c_to_e(amnt/between));
+            String output = String.format("%-7.7s:%9.9s %18.18s\n", cat, c_to_e(amnt), String.format("(%s pro Tag)", c_to_e(amnt/between)));
             res.insert(0, output);
         }
 
-        ;
-        res.insert(0,String.format("%-7.7s:%9.9s (%8.8s pro Tag)\n\n", "W/o Big",
-                c_to_e(overall_withoutBig), c_to_e(overall_withoutBig/between)));
-        res.insert(0,String.format("%-7.7s:%9.9s (%8.8s pro Tag)\n", "ALL",
-                c_to_e(overall_all), c_to_e(overall_all/between)));
+        res.insert(0,String.format("%-7.7s:%9.9s %18.18s\n\n", "W/o Big",
+                c_to_e(overall_withoutBig), String.format("(%s pro Tag)", c_to_e(overall_withoutBig/between))));
+        res.insert(0,String.format("%-7.7s:%9.9s %18.18s\n", "ALL",
+                c_to_e(overall_all), String.format("(%s pro Tag)", c_to_e(overall_all/between))));
 
         res.insert(0, String.format("Daten: %s - %s (%s Tage)\n\n",
                 s_to_s(d1, "en", "de"), s_to_s(d2, "en", "de"), (int) between));
@@ -1220,6 +1226,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     //TODO 7    colored lines (for better readabilty)
     //TODO 1    write one function for displaying, and use that for every part of the app
     //TODO 3    format output so that it's formed to columns
+    //TODO      Ändere DB-Queries zu format-style
 
     //endregion
 }

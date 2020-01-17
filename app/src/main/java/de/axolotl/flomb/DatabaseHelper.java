@@ -109,13 +109,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public Cursor getPastMonth(){
         SQLiteDatabase db = this.getReadableDatabase();
         return db.rawQuery( "SELECT * FROM "+ TABLE_NAME + " WHERE " + COL_9 +
-                " BETWEEN date('now', '-1 month') AND date('now') ORDER BY " + COL_9 + " DESC",null);
+                " BETWEEN date('now', '-1 month', '+1 day') AND date('now') ORDER BY " + COL_9 + " DESC",null);
     }
 
     public Cursor getSummaryOfPastMonth(){
         SQLiteDatabase db = this.getReadableDatabase();
         return db.rawQuery( "SELECT "+COL_2+", SUM("+ COL_1 +") FROM "+ TABLE_NAME + " WHERE " +
-                COL_9 + " BETWEEN date('now', '-1 month') AND date('now')"+ " GROUP BY " + COL_2,null);
+                COL_9 + " BETWEEN date('now', '-1 month', '+1 day') AND date('now')"+ " GROUP BY " + COL_2,null);
     }
 
     public Cursor getDaysBetween(String d1, String d2){
