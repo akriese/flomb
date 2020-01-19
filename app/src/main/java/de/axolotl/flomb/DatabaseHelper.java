@@ -29,16 +29,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public static final String DATABASE_NAME = "flomb.db";
     public static final String TABLE_NAME = "Ausgaben";
-    public static final String COL_0 = "ID";
-    public static final String COL_1 = "AMOUNT";
-    public static final String COL_2 = "CATEGORY";
-    public static final String COL_3 = "SUBCATEGORY";
-    public static final String COL_4 = "DESCRIPTION";
-    public static final String COL_5 = "YEAR";
-    public static final String COL_6 = "MONTH";
-    public static final String COL_7 = "DAY";
-    public static final String COL_8 = "PLACE";
-    public static final String COL_9 = "DATESTR";
+    public static final String C0 = "ID";
+    public static final String C1 = "AMOUNT";
+    public static final String C2 = "CATEGORY";
+    public static final String C3 = "SUBCATEGORY";
+    public static final String C4 = "DESCRIPTION";
+    public static final String C5 = "YEAR";
+    public static final String C6 = "MONTH";
+    public static final String C7 = "DAY";
+    public static final String C8 = "PLACE";
+    public static final String C9 = "DATESTR";
 
 
     public DatabaseHelper(Context context) {
@@ -47,8 +47,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL("CREATE TABLE "+TABLE_NAME+" ("+COL_0+" INTEGER PRIMARY KEY AUTOINCREMENT,"+COL_1+" INTEGER,"+COL_2+" TEXT,"+
-        COL_3+" TEXT,"+COL_4+" TEXT,"+COL_5+" INTEGER,"+COL_6+" INTEGER,"+COL_7+" INTEGER,"+COL_8+" TEXT,"+COL_9+" TEXT)");
+        db.execSQL("CREATE TABLE "+TABLE_NAME+" ("+C0+" INTEGER PRIMARY KEY AUTOINCREMENT,"+C1+" INTEGER,"+C2+" TEXT,"+
+        C3+" TEXT,"+C4+" TEXT,"+C5+" INTEGER,"+C6+" INTEGER,"+C7+" INTEGER,"+C8+" TEXT,"+C9+" TEXT)");
     }
 
     @Override
@@ -61,15 +61,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                               String place, String date){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
-        contentValues.put(COL_1,amount);
-        contentValues.put(COL_2,category);
-        contentValues.put(COL_3,subcategory);
-        contentValues.put(COL_4,description);
-        contentValues.put(COL_5,0);
-        contentValues.put(COL_6,0);
-        contentValues.put(COL_7,0);
-        contentValues.put(COL_8,place);
-        contentValues.put(COL_9,date);
+        contentValues.put(C1,amount);
+        contentValues.put(C2,category);
+        contentValues.put(C3,subcategory);
+        contentValues.put(C4,description);
+        contentValues.put(C5,0);
+        contentValues.put(C6,0);
+        contentValues.put(C7,0);
+        contentValues.put(C8,place);
+        contentValues.put(C9,date);
         long result = db.insert(TABLE_NAME,null,contentValues);
 
         return !(result==-1);
@@ -79,15 +79,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                               String description, String place, String date){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
-        contentValues.put(COL_1,amount);
-        contentValues.put(COL_2,category);
-        contentValues.put(COL_3,subcategory);
-        contentValues.put(COL_4,description);
-        contentValues.put(COL_5,0);
-        contentValues.put(COL_6,0);
-        contentValues.put(COL_7,0);
-        contentValues.put(COL_8,place);
-        contentValues.put(COL_9,date);
+        contentValues.put(C1,amount);
+        contentValues.put(C2,category);
+        contentValues.put(C3,subcategory);
+        contentValues.put(C4,description);
+        contentValues.put(C5,0);
+        contentValues.put(C6,0);
+        contentValues.put(C7,0);
+        contentValues.put(C8,place);
+        contentValues.put(C9,date);
         long result = db.update(TABLE_NAME, contentValues, "ID = ?", new String[] {Integer.toString(id)});
         return !(result==-1);
     }
@@ -100,22 +100,22 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public Cursor getQueryData(String cat, String fr_str, String to_str){
-        String selectionDate = COL_9+" BETWEEN '"+fr_str+"' AND '"+to_str+"'";
+        String selectionDate = C9+" BETWEEN '"+fr_str+"' AND '"+to_str+"'";
         SQLiteDatabase db = this.getReadableDatabase();
         return db.rawQuery("SELECT * FROM "+TABLE_NAME+" WHERE " + selectionDate + " AND " +
-                COL_2 + " IN (" + cat + ") ORDER BY "+COL_9+" DESC",null);
+                C2 + " IN (" + cat + ") ORDER BY "+C9+" DESC, " + C0,null);
     }
 
     public Cursor getPastMonth(){
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery( "SELECT * FROM "+ TABLE_NAME + " WHERE " + COL_9 +
-                " BETWEEN date('now', '-1 month', '+1 day') AND date('now') ORDER BY " + COL_9 + " DESC",null);
+        return db.rawQuery( "SELECT * FROM "+ TABLE_NAME + " WHERE " + C9 +
+                " BETWEEN date('now', '-1 month', '+1 day') AND date('now') ORDER BY " + C9 + " DESC",null);
     }
 
     public Cursor getSummaryOfPastMonth(){
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery( "SELECT "+COL_2+", SUM("+ COL_1 +") FROM "+ TABLE_NAME + " WHERE " +
-                COL_9 + " BETWEEN date('now', '-1 month', '+1 day') AND date('now')"+ " GROUP BY " + COL_2,null);
+        return db.rawQuery( "SELECT "+C2+", SUM("+ C1 +") FROM "+ TABLE_NAME + " WHERE " +
+                C9 + " BETWEEN date('now', '-1 month', '+1 day') AND date('now')"+ " GROUP BY " + C2,null);
     }
 
     public Cursor getDaysBetween(String d1, String d2){
@@ -124,11 +124,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public Cursor getSummaryOfQuery(String cat, String fr_str, String to_str){
-        String selectionDate = COL_9+" BETWEEN '"+fr_str+"' AND '"+to_str+"'";
+        String selectionDate = C9+" BETWEEN '"+fr_str+"' AND '"+to_str+"'";
         Log.wtf("SUM",cat);
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery("SELECT "+COL_2+ ", SUM("+ COL_1 +") FROM "+TABLE_NAME+" WHERE "+
-                selectionDate+" AND "+COL_2+" IN ("+cat+") GROUP BY "+COL_2,null);
+        return db.rawQuery("SELECT "+C2+ ", SUM("+ C1 +") FROM "+TABLE_NAME+" WHERE "+
+                selectionDate+" AND "+C2+" IN ("+cat+") GROUP BY "+C2,null);
     }
 
     public Cursor searchForUpdateEntry(int id){
@@ -138,14 +138,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public Cursor searchQuery(String s){
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery("SELECT * FROM "+ TABLE_NAME + " WHERE " + COL_4 +
-                " LIKE '%" + s + "%' ORDER BY " + COL_9 + " DESC", null);
+        return db.rawQuery("SELECT * FROM "+ TABLE_NAME + " WHERE " + C4 +
+                " LIKE '%" + s + "%' ORDER BY " + C9 + " DESC", null);
     }
 
     public Cursor searchQuerySummary(String s){
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery("SELECT " + COL_2 + ", SUM(" + COL_1 + ") FROM "+ TABLE_NAME + " WHERE " + COL_4 +
-                " LIKE '%" + s + "%' GROUP BY "+COL_2, null);
+        return db.rawQuery("SELECT " + C2 + ", SUM(" + C1 + ") FROM "+ TABLE_NAME + " WHERE " + C4 +
+                " LIKE '%" + s + "%' GROUP BY "+C2, null);
     }
 
 
@@ -166,17 +166,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public int mapLoanToWorkingHours(String fr_str, String to_str, int sum, String purpose){
         SQLiteDatabase db = this.getWritableDatabase();
-        Cursor res = db.rawQuery("SELECT SUM("+COL_1+") FROM "+TABLE_NAME+" WHERE "+
-                COL_4+" LIKE '%"+purpose+"%' AND "+COL_9+" BETWEEN '"+fr_str+"' AND '"+to_str+"' AND "+COL_3+" = 'Wage'", null);
+        Cursor res = db.rawQuery("SELECT SUM("+C1+") FROM "+TABLE_NAME+" WHERE "+
+                C4+" LIKE '%"+purpose+"%' AND "+C9+" BETWEEN '"+fr_str+"' AND '"+to_str+"' AND "+C3+" = 'Wage'", null);
         res.moveToFirst();
         int hours = res.getInt(0);
         res.close();
         if (hours == 0)
             return 1;
         double perHour = sum / (double) hours;
-        db.execSQL("UPDATE " + TABLE_NAME + " SET "+COL_4+" = '"+purpose+"'|| ': ' || "+COL_1+", " +
-                COL_1+" = cast(("+COL_1+" * "+perHour+") as int) WHERE "+COL_4+" LIKE '%"+purpose+"%' " +
-                "AND "+COL_9+" BETWEEN '"+fr_str+"' AND '"+to_str+"' AND "+COL_3+" = 'Wage'");
+        db.execSQL("UPDATE " + TABLE_NAME + " SET "+C4+" = '"+purpose+"'|| ': ' || "+C1+", " +
+                C1+" = cast(("+C1+" * "+perHour+") as int) WHERE "+C4+" LIKE '%"+purpose+"%' " +
+                "AND "+C9+" BETWEEN '"+fr_str+"' AND '"+to_str+"' AND "+C3+" = 'Wage'");
         return 0;
     }
 
@@ -184,9 +184,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public int undoMapLoan(String fr_str, String to_str, String purpose){
         SQLiteDatabase db = this.getWritableDatabase();
         int length = purpose.length()+3; // Länge + ": " + 1, da Substring bei 1 anfängt, nicht bei 0
-        db.execSQL("UPDATE " + TABLE_NAME + " SET "+COL_4+" = '"+purpose+"', " +
-                COL_1+" = cast(SUBSTR("+COL_4+","+length+") as int) WHERE "+COL_4+" LIKE '%"+purpose+"%' " +
-                "AND "+COL_9+" BETWEEN '"+fr_str+"' AND '"+to_str+"' AND "+COL_3+" = 'Wage'");
+        db.execSQL("UPDATE " + TABLE_NAME + " SET "+C4+" = '"+purpose+"', " +
+                C1+" = cast(SUBSTR("+C4+","+length+") as int) WHERE "+C4+" LIKE '%"+purpose+"%' " +
+                "AND "+C9+" BETWEEN '"+fr_str+"' AND '"+to_str+"' AND "+C3+" = 'Wage'");
         return 0;
     }
 
@@ -199,8 +199,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public Cursor getSuggestions(String cat, String subcat, int minimum){
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery("SELECT "+COL_4+", count(*) FROM "+TABLE_NAME+" WHERE "+COL_2+" = "+cat+" AND "
-                +COL_3+" = "+subcat+" GROUP BY "+COL_4,null);
+        return db.rawQuery("SELECT "+C4+", count(*) FROM "+TABLE_NAME+" WHERE "+C2+" = "+cat+" AND "
+                +C3+" = "+subcat+" GROUP BY "+C4,null);
     }
 
     public String exportDatabase(String database) {

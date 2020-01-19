@@ -895,22 +895,16 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     //getQueriedData
     public StringBuilder buildQueriedData(Cursor data, Cursor summary){
         StringBuilder res = new StringBuilder();
+        String form = makeDynamicOutputFormat(data);
         data.moveToPosition(-1);
 
         while (data.moveToNext()){
             String s = data.getString(2);
-            String kurz = categories_short.get(categories.indexOf(s));;
+            String kurz = categories_short.get(categories.indexOf(s));
 
-            //switch (data.getString(8)){
-                //case "Berlin": kurzOrt = "B."; break;
-                //case "Jena": kurzOrt = "J."; break;
-                //case "unterwegs": kurzOrt = "un."; break;
-                //default: kurzOrt = data.getString(8); break;
-            //}
-
-            String output = String.format("%s %6.6s: %8.8s, %-10.10s (%s)\n", s_to_s(data.getString(9), "en", "de"),
-                    String.format("(%d)", data.getInt(0)), c_to_e(data.getInt(1)), data.getString(4),
-                    kurz, data.getString(3));
+            String output = String.format(form, s_to_s(data.getString(9), "en", "de"),
+                    String.format("(%d)", data.getInt(0)), c_to_e(data.getInt(1)),
+                    data.getString(4), kurz, data.getString(3), data.getString(8));
             res.append(output);
         }
 
@@ -959,6 +953,27 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         while (res.charAt(res.length() - 1) == ' ')
             res = res.substring(0, res.length() - 1);
         return res;
+    }
+
+    String makeDynamicOutputFormat(Cursor data) {
+        ArrayList<Integer> year = new ArrayList<>();
+        int amt = 0, id = 0;
+        data.moveToPosition(-1);
+        while (data.moveToNext()) {
+            int len = Integer.toString(data.getInt(1)).length();
+            if (len > amt)
+                amt = len;
+            if (data.getInt(0) > id)
+                id = data.getInt(0);
+            int y = Integer.parseInt(data.getString(9).substring(0, 4));
+            if (!year.contains(y))
+                year.add(y);
+        }
+        int y = (year.size() == 1 ? 6 : 10);
+        id = Integer.toString(id).length() + 2;
+        int a = amt + 2;
+        int d = 36 - id - a - y;                        // TODO get the 36 dynamically
+        return "%" + y + "." + y + "s %" + id + "." + id + "s: %" + a + "." + a + "s, %-" + d + "." + d + "s (%s, %3.3s)\n";
     }
 
     public int getIndexOfCheckedRbn(ArrayList<RadioButton> list){
@@ -1221,12 +1236,10 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     //TODO      Query helper (Code Blocks to choose from)
     //TODO 5    abo-func
     //TODO 6    txv: link to update-window --> faster updates
-    //TODO 1    use same func for stats, search and front page
     //TODO 4    remember/recommendation func for edt_description (AI style?), AutoCompleteTextView
     //TODO 7    colored lines (for better readabilty)
-    //TODO 1    write one function for displaying, and use that for every part of the app
-    //TODO 3    format output so that it's formed to columns
     //TODO      Ändere DB-Queries zu format-style
+    //TODO 1    Dynamic formatting
 
     //endregion
 }
