@@ -77,6 +77,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     public ScrollView scv_sumup1;
     public Spinner spi_description;
     public Button btn_date1from, btn_date1to, btn_date2from, btn_date2to, btn_loan_to, btn_loan_from;
+    public Button btn_showId, btn_showPlace;
 
     //endregion
     //region other Elements and variables
@@ -86,6 +87,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     private String description="Beschreibung", category, subcategory, place;
     private String dateAdd;
     private ArrayList<String> categories, categories_short;
+    private boolean showId, showPlace;
 
     private ArrayList<ArrayList<String>> sub_categories;
     private DateTime d1f, d1t, d2f, d2t, dLoanF, dLoanT;
@@ -156,6 +158,8 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         btn_loan_to = findViewById(R.id.btn_date_abo_to);
         edt_loan_amt = findViewById(R.id.edt_amount_abo);
         edt_loan_desc = findViewById(R.id.edt_desc_abo);
+        btn_showId = findViewById(R.id.btn_outId);
+        btn_showPlace = findViewById(R.id.btn_outPlace);
         //endregion
         //region stats
         rll_stats = findViewById(R.id.rll_stats);
@@ -299,15 +303,13 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         });
         //endregion
 
+        SharedPreferences shrd = getSharedPreferences("USER_PREFERENCES_OUTPUT", MODE_PRIVATE);
+        showId = shrd.getBoolean("ID", false);
+        showPlace = shrd.getBoolean("PLACE", false);
+
+
         updateFrontPage();
         PACKAGE_NAME = getApplicationContext().getPackageName();
-        //SharedPreferences.Editor e = getSharedPreferences("USER_PREFERENCES_STATS", MODE_PRIVATE).edit();
-        //String def_date = d_to_s(DateTime.now(), "en");
-        //e.putString("D1F", def_date);
-        //e.putString("D1T", def_date);
-        //e.putString("D2F", def_date);
-        //e.putString("D2T", def_date);
-        //e.apply();
     }
 
     public void updateFrontPage(){ //getAllData
@@ -896,6 +898,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     public StringBuilder buildQueriedData(Cursor data, Cursor summary){
         StringBuilder res = new StringBuilder();
         String form = makeDynamicOutputFormat(data);
+        Log.wtf("DYN", form);
         data.moveToPosition(-1);
 
         while (data.moveToNext()){
@@ -903,8 +906,8 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
             String kurz = categories_short.get(categories.indexOf(s));
 
             String output = String.format(form, s_to_s(data.getString(9), "en", "de"),
-                    String.format("(%d)", data.getInt(0)), c_to_e(data.getInt(1)),
-                    data.getString(4), kurz, data.getString(3), data.getString(8));
+                    String.format(" (%d)", data.getInt(0)), c_to_e(data.getInt(1)),
+                    data.getString(4), kurz, data.getString(8));
             res.append(output);
         }
 
@@ -970,10 +973,11 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
                 year.add(y);
         }
         int y = (year.size() == 1 ? 6 : 10);
-        id = Integer.toString(id).length() + 2;
+        id = Integer.toString(id).length() + 3;
+        int extra = 3;
         int a = amt + 2;
-        int d = 36 - id - a - y;                        // TODO get the 36 dynamically
-        return "%" + y + "." + y + "s %" + id + "." + id + "s: %" + a + "." + a + "s, %-" + d + "." + d + "s (%s, %3.3s)\n";
+        int d = 37 - a - y - extra - (showId ? id : 0) - (showPlace ? extra + 2 : 0);                        // TODO get the 36 dynamically
+        return "%1$" + y + "." + y + "s" + (showId ? "%2$" + id + "." + id + "s" : "") + ": %3$" + a + "." + a + "s, %4$-" + d + "." + d + "s (%5$s" + (showPlace ? ", %6$" + extra + "." + extra + "s" : "") + ")\n";
     }
 
     public int getIndexOfCheckedRbn(ArrayList<RadioButton> list){
@@ -1229,6 +1233,31 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
+
+    public void changeOutputBools(String button) {
+        SharedPreferences.Editor shrd = getSharedPreferences("USER_PREFERENCES_OUTPUT", MODE_PRIVATE).edit();
+        switch (button) {
+            case "ID":
+                shrd.putBoolean("ID", !showId);
+                showId = !showId;
+                btn_showId.setText((showId ? getResources().getString(R.string.hide_id) : getResources().getString(R.string.show_id)));
+                break;
+            case "Place":
+                shrd.putBoolean("PLACE", !showPlace);
+                showPlace = !showPlace;
+                btn_showPlace.setText((showPlace ? getResources().getString(R.string.hide_place) : getResources().getString(R.string.show_place)));
+                break;
+        }
+        shrd.apply();
+    }
+
+    public void onShowIdClick(View view) {
+        changeOutputBools("ID");
+    }
+
+    public void onShowPlaceClick(View view) {
+        changeOutputBools("Place");
+    }
     //endregion settings + children
 
     //region TO-DO area
@@ -1240,6 +1269,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     //TODO 7    colored lines (for better readabilty)
     //TODO      Ändere DB-Queries zu format-style
     //TODO 1    Dynamic formatting
+    //TODO 2    let user choose to show id and place
 
     //endregion
 }

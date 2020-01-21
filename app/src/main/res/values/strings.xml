@@ -25,6 +25,10 @@
     <string name="update_entry">Update</string>
     <string name="delete_entry">Delete</string>
     <string name="copy_entry">Copy</string>
+    <string name="show_id">Show ID</string>
+    <string name="show_place">Show Place</string>
+    <string name="hide_id">Hide ID</string>
+    <string name="hide_place">Hide Place</string>
     <string name="data_del">Data deleted!</string>
     <string name="missing_data">Es fehlen Informationen! (nicht hinzugefügt)</string>
     <string name="settings">Einstellungen</string>

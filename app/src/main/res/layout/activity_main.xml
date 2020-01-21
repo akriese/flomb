@@ -469,9 +469,35 @@
                 android:layout_weight="1.0"/>
         </LinearLayout>
 
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/lnl_output_settings"
+            android:paddingTop="25dp"
+            android:layout_below="@+id/lnl_abo_mapping"
+            android:layout_gravity="center"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btn_outId"
+                android:layout_height="fill_parent"
+                android:layout_width="0.0dip"
+                android:text="@string/show_id"
+                android:onClick="onShowIdClick"
+                android:layout_weight="1.0"/>
+
+            <Button
+                android:id="@+id/btn_outPlace"
+                android:layout_height="fill_parent"
+                android:layout_width="0.0dip"
+                android:text="@string/show_place"
+                android:onClick="onShowPlaceClick"
+                android:layout_weight="1.0"/>
+        </LinearLayout>
+
     </RelativeLayout>
 
-    <!-- STATS -->
+    <!-- STATS SHOW -->
     <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
