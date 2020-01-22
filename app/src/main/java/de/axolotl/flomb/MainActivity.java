@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.opengl.Visibility;
 import android.os.Environment;
@@ -84,10 +85,11 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     private int app_state;
     private int amount=0, id, datePickerMode;
     private int date_diff1, date_diff2;
+    private int screenWidth;
     private String description="Beschreibung", category, subcategory, place;
     private String dateAdd;
     private ArrayList<String> categories, categories_short;
-    private boolean showId, showPlace;
+    private boolean showId = true, showPlace = true;
 
     private ArrayList<ArrayList<String>> sub_categories;
     private DateTime d1f, d1t, d2f, d2t, dLoanF, dLoanT;
@@ -304,9 +306,12 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         //endregion
 
         SharedPreferences shrd = getSharedPreferences("USER_PREFERENCES_OUTPUT", MODE_PRIVATE);
-        showId = shrd.getBoolean("ID", false);
-        showPlace = shrd.getBoolean("PLACE", false);
+        showId = shrd.getBoolean("ID", true);
+        showPlace = shrd.getBoolean("PLACE", true);
+        btn_showId.setText(showId ? getResources().getString(R.string.hide_id) : getResources().getString(R.string.show_id));
+        btn_showPlace.setText(showPlace ? getResources().getString(R.string.hide_place) : getResources().getString(R.string.show_place));
 
+        screenWidth = Resources.getSystem().getDisplayMetrics().widthPixels;
 
         updateFrontPage();
         PACKAGE_NAME = getApplicationContext().getPackageName();
@@ -976,8 +981,10 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         id = Integer.toString(id).length() + 3;
         int extra = 3;
         int a = amt + 2;
-        int d = 37 - a - y - extra - (showId ? id : 0) - (showPlace ? extra + 2 : 0);                        // TODO get the 36 dynamically
-        return "%1$" + y + "." + y + "s" + (showId ? "%2$" + id + "." + id + "s" : "") + ": %3$" + a + "." + a + "s, %4$-" + d + "." + d + "s (%5$s" + (showPlace ? ", %6$" + extra + "." + extra + "s" : "") + ")\n";
+        int d = 37 - a - y - extra - (showId ? id : 0) - (showPlace ? extra + 2 : 0);                        // TODO get the 37 dynamically
+        Log.wtf("DYN", screenWidth+"");
+        return "%1$" + y + "." + y + "s" + (showId ? "%2$" + id + "." + id + "s" : "") + ": %3$" + a
+                + "." + a + "s, %4$-" + d + "." + d + "s (%5$s" + (showPlace ? ", %6$" + extra + "." + extra + "s" : "") + ")\n";
     }
 
     public int getIndexOfCheckedRbn(ArrayList<RadioButton> list){
