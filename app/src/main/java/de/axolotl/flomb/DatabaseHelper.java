@@ -7,9 +7,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Environment;
 import android.util.Log;
-import android.widget.Toast;
-
-import org.joda.time.DateTime;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -17,9 +14,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Locale;
 
 /**
  * Created by Anton on 12.02.2017.
@@ -94,58 +88,58 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public void insertDateColumn(){
         SQLiteDatabase db = this.getWritableDatabase();
-        db.execSQL("ALTER TABLE " + TABLE_NAME + " ADD COLUMN DATESTR TEXT");
-        db.execSQL("UPDATE " + TABLE_NAME + " SET DATESTR = date(YEAR||'-'||(CASE WHEN MONTH LIKE '_' " +
-                "THEN ('0'||MONTH) ELSE MONTH END)||'-'||(CASE WHEN DAY LIKE '_' THEN ('0'||DAY) ELSE DAY END))");
+        db.execSQL(String.format("ALTER TABLE %s ADD COLUMN DATESTR TEXT", TABLE_NAME));
+        db.execSQL(String.format("UPDATE %s SET DATESTR = date(YEAR||'-'||(CASE WHEN MONTH LIKE '_' " +
+                "THEN ('0'||MONTH) ELSE MONTH END)||'-'||(CASE WHEN DAY LIKE '_' THEN ('0'||DAY) ELSE DAY END))", TABLE_NAME));
     }
 
     public Cursor getQueryData(String cat, String fr_str, String to_str){
-        String selectionDate = C9+" BETWEEN '"+fr_str+"' AND '"+to_str+"'";
+        String selectionDate = String.format("%s BETWEEN '%s' AND '%s'", C9, fr_str, to_str);
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery("SELECT * FROM "+TABLE_NAME+" WHERE " + selectionDate + " AND " +
-                C2 + " IN (" + cat + ") ORDER BY "+C9+" DESC, " + C0,null);
+        return db.rawQuery(String.format("SELECT * FROM %s WHERE %s AND %s IN (%s) ORDER BY %s DESC, %s",
+                TABLE_NAME, selectionDate, C2, cat, C9, C0),null);
     }
 
     public Cursor getPastMonth(){
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery( "SELECT * FROM "+ TABLE_NAME + " WHERE " + C9 +
-                " BETWEEN date('now', '-1 month', '+1 day') AND date('now') ORDER BY " + C9 + " DESC",null);
+        return db.rawQuery(String.format( "SELECT * FROM %s WHERE %s" +
+                " BETWEEN date('now', '-1 month', '+1 day') AND date('now') ORDER BY %s DESC", TABLE_NAME, C9, C9),null);
     }
 
     public Cursor getSummaryOfPastMonth(){
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery( "SELECT "+C2+", SUM("+ C1 +") FROM "+ TABLE_NAME + " WHERE " +
-                C9 + " BETWEEN date('now', '-1 month', '+1 day') AND date('now')"+ " GROUP BY " + C2,null);
+        return db.rawQuery(String.format( "SELECT %s, SUM(%s) FROM %s WHERE %s BETWEEN date('now', '-1 month', '+1 day') " +
+                "AND date('now') GROUP BY %s", C2, C1, TABLE_NAME, C9, C2), null);
     }
 
     public Cursor getDaysBetween(String d1, String d2){
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery( "SELECT julianday('"+d2+"')-julianday('"+d1+"')",null);
+        return db.rawQuery( String.format("SELECT julianday('%s')-julianday('%s')", d2, d1),null);
     }
 
     public Cursor getSummaryOfQuery(String cat, String fr_str, String to_str){
-        String selectionDate = C9+" BETWEEN '"+fr_str+"' AND '"+to_str+"'";
+        String selectionDate = String.format("%s BETWEEN '%s' AND '%s'", C9, fr_str, to_str);
         Log.wtf("SUM",cat);
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery("SELECT "+C2+ ", SUM("+ C1 +") FROM "+TABLE_NAME+" WHERE "+
-                selectionDate+" AND "+C2+" IN ("+cat+") GROUP BY "+C2,null);
+        return db.rawQuery(String.format("SELECT %s, SUM(%s) FROM %s WHERE %s AND %s IN (%s) GROUP BY %s",
+                C2, C1, TABLE_NAME, selectionDate, C2, cat, C2), null);
     }
 
     public Cursor searchForUpdateEntry(int id){
         SQLiteDatabase db = this.getWritableDatabase();
-        return db.rawQuery("SELECT * FROM "+ TABLE_NAME + " WHERE ID = " + id, null);
+        return db.rawQuery(String.format("SELECT * FROM %s WHERE ID = %d", TABLE_NAME, id), null);
     }
 
     public Cursor searchQuery(String s){
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery("SELECT * FROM "+ TABLE_NAME + " WHERE " + C4 +
-                " LIKE '%" + s + "%' ORDER BY " + C9 + " DESC", null);
+        return db.rawQuery(String.format("SELECT * FROM %s WHERE %s LIKE '%%%s%%' ORDER BY %s DESC",
+                TABLE_NAME, C4, s, C9), null);
     }
 
     public Cursor searchQuerySummary(String s){
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery("SELECT " + C2 + ", SUM(" + C1 + ") FROM "+ TABLE_NAME + " WHERE " + C4 +
-                " LIKE '%" + s + "%' GROUP BY "+C2, null);
+        return db.rawQuery(String.format("SELECT %s, SUM(%s) FROM %s WHERE %s LIKE '%%%s%%' GROUP BY %s",
+                C2, C1, TABLE_NAME, C4, s, C2), null);
     }
 
 
@@ -166,27 +160,26 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public int mapLoanToWorkingHours(String fr_str, String to_str, int sum, String purpose){
         SQLiteDatabase db = this.getWritableDatabase();
-        Cursor res = db.rawQuery("SELECT SUM("+C1+") FROM "+TABLE_NAME+" WHERE "+
-                C4+" LIKE '%"+purpose+"%' AND "+C9+" BETWEEN '"+fr_str+"' AND '"+to_str+"' AND "+C3+" = 'Wage'", null);
+        Cursor res = db.rawQuery(String.format("SELECT SUM(%s) FROM %s WHERE %s LIKE '%%%s%%' AND %s BETWEEN '%s' AND '%s' AND %s = 'Wage'",
+                C1, TABLE_NAME, C4, purpose, C9, fr_str, to_str, C3), null);
         res.moveToFirst();
         int hours = res.getInt(0);
         res.close();
         if (hours == 0)
             return 1;
         double perHour = sum / (double) hours;
-        db.execSQL("UPDATE " + TABLE_NAME + " SET "+C4+" = '"+purpose+"'|| ': ' || "+C1+", " +
-                C1+" = cast(("+C1+" * "+perHour+") as int) WHERE "+C4+" LIKE '%"+purpose+"%' " +
-                "AND "+C9+" BETWEEN '"+fr_str+"' AND '"+to_str+"' AND "+C3+" = 'Wage'");
+        db.execSQL(String.format("UPDATE %s SET %s = '%s'|| ': ' || %s, %s = cast((%s * %d) as int) " +
+                        "WHERE %s LIKE '%%%s%%' AND %s BETWEEN '%s' AND '%s' AND %s = 'Wage'",
+                TABLE_NAME, C4, purpose, C1, C1, C1, perHour, C4, purpose, C9, fr_str, to_str, C3));
         return 0;
     }
 
-    //TODO undoMapLoan
     public int undoMapLoan(String fr_str, String to_str, String purpose){
         SQLiteDatabase db = this.getWritableDatabase();
         int length = purpose.length()+3; // Länge + ": " + 1, da Substring bei 1 anfängt, nicht bei 0
-        db.execSQL("UPDATE " + TABLE_NAME + " SET "+C4+" = '"+purpose+"', " +
-                C1+" = cast(SUBSTR("+C4+","+length+") as int) WHERE "+C4+" LIKE '%"+purpose+"%' " +
-                "AND "+C9+" BETWEEN '"+fr_str+"' AND '"+to_str+"' AND "+C3+" = 'Wage'");
+        db.execSQL(String.format("UPDATE %s SET %s = '%s', %s = cast(SUBSTR(%s, %d) as int) WHERE %s " +
+                        "LIKE '%%%s%%' AND %s BETWEEN '%s' AND '%s' AND %s = 'Wage'",
+                TABLE_NAME, C4, purpose, C1, C4, length, C4, purpose, C9, fr_str, to_str, C3));
         return 0;
     }
 
@@ -199,8 +192,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public Cursor getSuggestions(String cat, String subcat, int minimum){
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery("SELECT "+C4+", count(*) FROM "+TABLE_NAME+" WHERE "+C2+" = "+cat+" AND "
-                +C3+" = "+subcat+" GROUP BY "+C4,null);
+        return db.rawQuery(String.format("SELECT %s, count(*) FROM %s WHERE %s = %s AND %s = %s GROUP BY %s",
+                C4, TABLE_NAME, C2, cat, C3, subcat, C4),null);
     }
 
     public String exportDatabase(String database) {
@@ -233,5 +226,4 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             return "anderer Fehler";
         }
     }
-        //update entry, go back to settings layout
 }

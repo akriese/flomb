@@ -553,7 +553,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
 
     public void showDatePickerDialog(){
         DateTime dtAdd;
-        if (app_state == FLOMB_ADD)
+        if (app_state == FLOMB_ADD || app_state == FLOMB_UPDATE)
             dtAdd = s_to_d(dateAdd, "en");
         else if (app_state == FLOMB_STATSETS)
             dtAdd = d1f;
@@ -1092,7 +1092,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         if (copy) {
             app_state = FLOMB_ADD;
             txv_headline.setText(R.string.copy_entry);
-            btn_addfinal.setText(R.string.copy_entry);
+            btn_addfinal.setText(R.string.add);
         }
         else {
             app_state = FLOMB_UPDATE;
@@ -1185,9 +1185,16 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     public void onSearchClick(View view) {
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        if (edt_search.getText().length() == 0) {
+            Toast.makeText(MainActivity.this, "No input given!", Toast.LENGTH_LONG).show();
+            return;
+        }
         Cursor data = myDB.searchQuery(edt_search.getText().toString());
         Cursor summary = myDB.searchQuerySummary(edt_search.getText().toString());
-
+        if (data.getCount() == 0) {
+            Toast.makeText(MainActivity.this, "Nothing found!", Toast.LENGTH_LONG).show();
+            return;
+        }
         displayQueryResults(buildQueriedData(data, summary));
     }
 
@@ -1274,9 +1281,10 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     //TODO 6    txv: link to update-window --> faster updates
     //TODO 4    remember/recommendation func for edt_description (AI style?), AutoCompleteTextView
     //TODO 7    colored lines (for better readabilty)
-    //TODO      Ändere DB-Queries zu format-style
-    //TODO 1    Dynamic formatting
-    //TODO 2    let user choose to show id and place
+    //TODO      Screen width dynamic formatting
+    //TODO      Sort in SQL-Functions, not afterwards
+    //TODO      Remove single date ints
+    //TODO 1    Replace all warnings etc. with resource entries
 
     //endregion
 }
