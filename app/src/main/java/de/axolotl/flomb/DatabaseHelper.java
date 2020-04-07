@@ -14,6 +14,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
+import java.util.Locale;
 
 /**
  * Created by Anton on 12.02.2017.
@@ -168,7 +169,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         if (hours == 0)
             return 1;
         double perHour = sum / (double) hours;
-        db.execSQL(String.format("UPDATE %s SET %s = '%s'|| ': ' || %s, %s = cast((%s * %d) as int) " +
+        db.execSQL(String.format(Locale.US, "UPDATE %s SET %s = '%s'|| ': ' || %s, %s = cast((%s * %f) as int) " +
                         "WHERE %s LIKE '%%%s%%' AND %s BETWEEN '%s' AND '%s' AND %s = 'Wage'",
                 TABLE_NAME, C4, purpose, C1, C1, C1, perHour, C4, purpose, C9, fr_str, to_str, C3));
         return 0;
