@@ -811,7 +811,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
         if (r.getCount() == 0) return;
         Cursor summary = myDB.getSummaryOfQuery(chosen_cats, d_to_s(d1f, "en"), d_to_s(d1t, "en"));
         if (single)
-            builder= buildQueriedData(r, summary);
+            builder = buildQueriedData(r, summary);
         else {
             StringBuilder builderDetails = new StringBuilder();
             StringBuilder builderStats = new StringBuilder();
@@ -1283,7 +1283,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     //TODO 7    colored lines (for better readabilty)
     //TODO      Screen width dynamic formatting
     //TODO      Sort in SQL-Functions, not afterwards
-    //TODO      Remove single date ints
+    //TODO      Remove single date ints (C5, C6, C7)
     //TODO 1    Replace all warnings etc. with resource entries
 
     //endregion
