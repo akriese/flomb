@@ -1285,6 +1285,7 @@ public class MainActivity extends AppCompatActivity implements DatePickerDialog.
     //TODO      Sort in SQL-Functions, not afterwards
     //TODO      Remove single date ints (C5, C6, C7)
     //TODO 1    Replace all warnings etc. with resource entries
+    //TODO 1    Allow -2,... for copying
 
     //endregion
 }
