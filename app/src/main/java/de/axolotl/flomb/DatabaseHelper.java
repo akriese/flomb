@@ -184,10 +184,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return 0;
     }
 
-    public int getLastEntryID() {
+    public int getNegativeEntryID(int id) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor r = db.rawQuery("SELECT MAX(ID) FROM "+TABLE_NAME, null);
-        r.moveToNext();
+        //Cursor r = db.rawQuery("SELECT MAX(ID) FROM "+TABLE_NAME, null);
+        Cursor r = db.rawQuery("SELECT ID FROM "+TABLE_NAME+" ORDER BY ID DESC", null);
+        r.moveToFirst();
+        r.move(-id - 1);
         return r.getInt(0);
     }
 
